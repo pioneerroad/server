@@ -1,0 +1,19 @@
+{
+  "name": "PioneerRoadConnect",
+  "version": "0.0.1",
+  "author": "Matthew Clark",
+  "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "^1.10.0",
+    "express": "^4.10.6",
+    "fs": "0.0.2",
+    "jwt-simple": "^0.2.0",
+    "moment": "^2.8.4",
+    "mongoose": "^3.8.21",
+    "morgan": "^1.5.0",
+    "passport": "^0.2.1",
+    "passport-facebook": "^1.0.3",
+    "passport-http": "^0.2.2",
+    "url": "^0.10.1"
+  }
+}
