@@ -54,3 +54,9 @@ module.exports = function(req, res, next) {
         next();
     }
 }
+
+// Helper function to call from middleware to check if user is Authenticated
+module.exports.isAuthenticated = function (req, res) {
+    if (!req.user) res.status(401).send({message:'Not Authorised'});
+    return true;
+}
