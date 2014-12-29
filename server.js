@@ -3,11 +3,16 @@ var app = express();
 var passport = require('passport');
 var https = require('https');
 var morgan = require('morgan');
+var mongoose = require('mongoose');
 
 // ============================================
 // Initialise Components
 // ============================================
 app.use(morgan('dev')); // Logs calls to Express routes to terminal
+
+// Connect to an instance of MongoDB
+var configDB = require('./instanceConfig/dbConfig');
+mongoose.connect(configDB.url); // connect to our database
 
 /* Passport */
 app.use(passport.initialize());

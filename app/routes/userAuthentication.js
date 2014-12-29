@@ -4,6 +4,7 @@
 var jwtAuth = require('../controllers/jwtAuth');
 var jwtToken = require('../controllers/jwtGenerate');
 var bodyParser = require('body-parser');
+var userController = require('../controllers/userController')
 
 var urlEncodedParser = bodyParser.urlencoded({extended: false});
 
@@ -20,14 +21,11 @@ module.exports = function(app, passport) {
         }
     );
     
-    app.post(
-        '/user/create',
-        passport.authenticate('basic-signup', { session: false }),
-        function(req, res) {
-            console.log(req);
-            res.json({message:'Congratulations, you just signed up!'});
-        }
-    );
+    app.post('/user/create', urlEncodedParser, function(req, res, next) {
+        userController.postUser(req, res);
+        res.json(req.body);
+        next();
+    });
     
     app.post(
         '/test',

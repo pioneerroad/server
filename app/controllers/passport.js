@@ -55,8 +55,8 @@ module.exports = function(app, passport) {
     },
     function(username, password, done) {
         process.nextTick(function() {
+            console.log(username);
             // Should check if the user exists and if not, then encrypt password and store, then return the stored user
-            
             return done(null, {message:'Something cool is going on'}); // Returns err & user
         });
     })); 
