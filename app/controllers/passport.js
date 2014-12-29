@@ -50,5 +50,14 @@ module.exports = function(app, passport) {
       }
     ));
     
-    /* Basic Signup */ 
+    /* Basic Signup */
+    passport.use('basic-signup', new BasicStrategy({   
+    },
+    function(username, password, done) {
+        process.nextTick(function() {
+            // Should check if the user exists and if not, then encrypt password and store, then return the stored user
+            
+            return done(null, {message:'Something cool is going on'}); // Returns err & user
+        });
+    })); 
 }

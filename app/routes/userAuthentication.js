@@ -20,9 +20,14 @@ module.exports = function(app, passport) {
         }
     );
     
-    app.post('/user/create', function(req, res) {
-        res.json({message:'Congratulations, you just signed up!'});
-    });
+    app.post(
+        '/user/create',
+        passport.authenticate('basic-signup', { session: false }),
+        function(req, res) {
+            console.log(req);
+            res.json({message:'Congratulations, you just signed up!'});
+        }
+    );
     
     app.post(
         '/test',
