@@ -2,27 +2,7 @@
 // Configure passport strategies for local and Facebook signup/login
 
 var BasicStrategy = require('passport-http').BasicStrategy;
-
-// BEGIN REPLACE
-// Replace this with call to MongoDB user model
-// Faking database data
-var users = [
-    { id: 1, username: 'bob', password: 'secret', email: 'bob@example.com' }
-  , { id: 2, username: 'joe', password: 'birthday', email: 'joe@example.com' }
-];
-
-// Faking method to retrieve data from database
-function findByUsername(username, fn) {
-  for (var i = 0, len = users.length; i < len; i++) {
-    var user = users[i];
-    if (user.username === username) {
-      return fn(null, user);
-    }
-  }
-  return fn(null, null);
-}
-
-// END REPLACE
+var User = require('../models/user');
 
 module.exports = function(app, passport) {
     
@@ -34,18 +14,18 @@ module.exports = function(app, passport) {
     passport.use('basic-login', new BasicStrategy({
       },
       function(username, password, done) {
-        
-        process.nextTick(function () {
-      
-          // Find the user by username.  If there is no user with the given
-          // username, or the password is not correct, set the user to `false` to
-          // indicate failure.  Otherwise, return the authenticated `user`.
-          findByUsername(username, function(err, user) {
-            if (err) { return done(err); }
-            if (!user) { return done(null, false); }
-            if (user.password != password) { return done(null, false); }
-            return done(null, user);
-          })
+        User.findOne({'basic.username' : username}, function(err, user) {
+            if (err) { return done(err); } // If error
+            if (!user) { return done(null, {error:'USER_NOT_FOUND'}); } // If user not found
+            
+            // User found so check password
+            user.verifyPassword(password, function(err, res) { 
+                if (!res) {
+                    return done(null, {error:'BAD_PASSWORD'}); // Wrong password
+                } else { 
+                    return done(null, user); // Password correct so return user
+                }
+            });
         });
       }
     )); 

@@ -14,9 +14,13 @@ module.exports = function(app, passport) {
         '/user/authenticate',
         passport.authenticate('basic-login', { session: false }),
         function(req, res) {
+            if (req.user.error) {
+                res.status(400).send(req.user.error);
+                return false;
+            }
             if (req.user) {
                 var token = jwtToken(app, req.user);
-                res.json(token);  
+                res.status(200).send(token);  
             }
         }
     );
