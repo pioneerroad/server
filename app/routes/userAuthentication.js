@@ -22,9 +22,13 @@ module.exports = function(app, passport) {
     );
     
     app.post('/user/create', urlEncodedParser, function(req, res, next) {
-        userController.postUser(req, res);
-        res.json(req.body);
-        next();
+        userController.postUser(req, res, function(err, user) {
+            if (err) {
+                res.status(400).send(err);
+            } else {
+                res.status(200).send(user);
+            }
+        });
     });
     
     app.post(
