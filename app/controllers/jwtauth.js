@@ -1,27 +1,7 @@
 // @file jwtauth.js
 
 var url = require('url');
-
-// BEGIN REPLACE
-// Replace this with call to MongoDB user model
-// Faking database data
-var users = [
-    { id: 1, username: 'bob', password: 'secret', email: 'bob@example.com' }
-  , { id: 2, username: 'joe', password: 'birthday', email: 'joe@example.com' }
-];
-
-// Faking method to retrieve data from database
-function findByUserId(userId, fn) {
-  for (var i = 0, len = users.length; i < len; i++) {
-    var user = users[i];
-    if (user.id === userId) {
-      return fn(null, user);
-    }
-  }
-  return fn(null, null);
-}
-
-// END REPLACE
+var User = require('../models/user');
 var express = require('express');
 var app = express();
 var jwt = require('jwt-simple');
@@ -35,16 +15,17 @@ module.exports = function(req, res, next) {
     if (token) {
         
         try {
-            var decoded = jwt.decode(token, app.get('jwtTokenSecret'));
-            if (decoded.exp <= Date.now()) {
+            var decoded = jwt.decode(token, app.get('jwtTokenSecret')); // Decode the token
+            
+            if (decoded.exp <= Date.now()) {  // Make sure it hasn't expired
                 res.end('Access token has expired', 400);
             }
-                
-            findByUserId(decoded.iss, function(err, user) {
-              if (err) { return done(err); }
-              if (!user) { return done(null, false); }
-              req.user = user;
-              return next();
+               
+            User.findOne({'_id':decoded.iss}, function(err, user) { // Try to fetch a user from the database using the User ID (_id) encoded in the token
+                if (err) { return next(err); }
+                if (!user) { return next(false); }
+                req.user = user;
+                return next();
             });
             
         } catch (err) {
