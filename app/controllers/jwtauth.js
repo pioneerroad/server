@@ -8,7 +8,7 @@ var jwt = require('jwt-simple');
 var jwtSecret = require('../../instanceConfig/jwtSecret').secret;
 app.set('jwtTokenSecret', jwtSecret);
 
-module.exports = function(req, res, next) {
+module.exports = function(req, res, done) {
     var parsedURL = url.parse(req.url, true);
     var token = (req.body && req.body.access_token) || parsedURL.query.access_token || req.headers["x-access-token"];
 
@@ -22,17 +22,17 @@ module.exports = function(req, res, next) {
             }
                
             User.findOne({'_id':decoded.iss}, function(err, user) { // Try to fetch a user from the database using the User ID (_id) encoded in the token
-                if (err) { return next(err); }
-                if (!user) { return next(false); }
+                if (err) { return done(err); }
+                if (!user) { return done(false); }
                 req.user = user;
-                return next();
+                return done();
             });
             
         } catch (err) {
-            return next();
+            return done();
         }
     } else {
-        next();
+        done();
     }
 }
 

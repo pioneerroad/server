@@ -1,4 +1,4 @@
-// @file createUser.js
+// @file userController.js
 
 var User = require('../models/user');
 

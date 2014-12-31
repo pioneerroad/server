@@ -10,22 +10,26 @@ var urlEncodedParser = bodyParser.urlencoded({extended: false});
 
 module.exports = function(app, passport) {
     // Process user login request
-    app.get(
-        '/user/authenticate',
+    
+    // ============================================
+    // Basic Routes
+    // ============================================
+    app.post(
+        '/user/basic/authenticate',
         passport.authenticate('basic-login', { session: false }),
         function(req, res) {
             if (req.user.error) {
                 res.status(400).send(req.user.error);
                 return false;
             }
-            if (req.user) {
+            if (req.user) { // Username and password OK, give the user a token
                 var token = jwtToken(app, req.user);
                 res.status(200).send(token);  
             }
         }
     );
     
-    app.post('/user/create', urlEncodedParser, function(req, res, next) {
+    app.post('/user/basic/create', urlEncodedParser, function(req, res, next) {
         userController.postUser(req, res, function(err, user) {
             if (err) {
                 res.status(400).send(err);
@@ -34,6 +38,18 @@ module.exports = function(app, passport) {
             }
         });
     });
+    
+    // ============================================
+    // Facebook Routes
+    // ============================================
+
+
+
+    // ============================================
+    // Test Routes (Delete later)
+    // ============================================
+    
+    
     
     app.post(
         '/test',

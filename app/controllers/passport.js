@@ -2,7 +2,9 @@
 // Configure passport strategies for local and Facebook signup/login
 
 var BasicStrategy = require('passport-http').BasicStrategy;
+var FacebookTokenStrategy = require('passport-facebook-token').Strategy;
 var User = require('../models/user');
+var authConfig = require('../../instanceConfig/authConfig');
 
 module.exports = function(app, passport) {
     
@@ -28,5 +30,10 @@ module.exports = function(app, passport) {
             });
         });
       }
-    )); 
-}
+    ));
+    
+    // ============================================
+    // Facebook Strategy
+    // ============================================
+    
+};
