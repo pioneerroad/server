@@ -12,7 +12,46 @@ var User = require('../models/user');
 module.exports = function(app, express) {
     var router = express.Router();
     
-    app.use('/api/v1/user/account', router);
+    app.use('/api/v1/user/account', router); // Register root URI for account-related routes
+    
+    // Create a new user Account
+    router.post('/create', urlEncodedParser, function(req, res, next) {
+        userController.postUser(req, res, function(err, user) {
+            if (err) {
+                res.status(400).send(err);
+            } else {
+                res.status(200).send(user);
+            }
+        });
+    });
+    
+    // Delete user account of authenticated user
+    router.post(
+        '/delete',
+        [urlEncodedParser, jwtAuth],
+    function(req, res) {
+        if (jwtAuth.isAuthenticated(req, res)) {
+           User.findByIdAndRemove(req.user._id,function(err, user) {
+               if (err) { res.send(err)
+               } else {
+                   res.json(user);
+               }
+        });
+    }});
+    
+    // Fetch authenticated user's user data, such as real name, gender and DOB
+    router.get(
+        '/fetch/userdata',
+        [urlEncodedParser, jwtAuth],
+    function(req, res) {
+        if (jwtAuth.isAuthenticated(req, res)) {
+           User.findById(req.user._id, 'userData' ,function(err, user) {
+               if (err) { res.send(err)
+               } else {
+                   res.json(user);
+               }
+        });
+    }});
     
     // Update user data, such as real names, gender and DOB.
     router.post(
@@ -37,16 +76,37 @@ module.exports = function(app, express) {
         });
     }});
     
+    // Fetch authenticated user's username and password
     router.get(
-        '/fetch',
+        '/fetch/basic',
         [urlEncodedParser, jwtAuth],
     function(req, res) {
         if (jwtAuth.isAuthenticated(req, res)) {
-           User.findById(req.user._id, 'basic.username' ,function(err, user) {
+           User.findById(req.user._id, 'basic' ,function(err, user) {
                if (err) { res.send(err)
                } else {
                    res.json(user);
                }
+        });
+    }});
+    
+    // Update password of authenticated user
+    router.post(
+        '/update/password',
+        [urlEncodedParser, jwtAuth],
+    function(req, res) {
+        if (jwtAuth.isAuthenticated(req, res)) {
+           User.findById(req.user._id, function(err, user) {
+               if (err) { res.send(err)
+               } else {
+                   user.basic.password = req.body.password
+               };
+               
+               user.save(function(err) {
+                   if (err) res.send(err);
+                   
+                   res.json(user);
+               }); 
         });
     }});
 }

@@ -33,17 +33,6 @@ module.exports = function(app, passport, express) {
         }
     );
     
-    // Create a new user (basic strategy)
-    router.post('/basic/create', urlEncodedParser, function(req, res, next) {
-        userController.postUser(req, res, function(err, user) {
-            if (err) {
-                res.status(400).send(err);
-            } else {
-                res.status(200).send(user);
-            }
-        });
-    });
-    
     // ============================================
     // Facebook Routes
     // ============================================
