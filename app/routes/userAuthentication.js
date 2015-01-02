@@ -7,15 +7,19 @@ var bodyParser = require('body-parser');
 var userController = require('../controllers/userController')
 
 var urlEncodedParser = bodyParser.urlencoded({extended: false});
+var User = require('../models/user');
 
-module.exports = function(app, passport) {
-    // Process user login request
+module.exports = function(app, passport, express) {
+    var router = express.Router();
     
+    app.use('/api/v1/user', router);
     // ============================================
     // Basic Routes
     // ============================================
-    app.post(
-        '/user/basic/authenticate',
+    
+    // Authenticate a user (basic strategy)
+    router.post(
+        '/basic/authenticate',
         passport.authenticate('basic-login', { session: false }),
         function(req, res) {
             if (req.user.error) {
@@ -29,7 +33,8 @@ module.exports = function(app, passport) {
         }
     );
     
-    app.post('/user/basic/create', urlEncodedParser, function(req, res, next) {
+    // Create a new user (basic strategy)
+    router.post('/basic/create', urlEncodedParser, function(req, res, next) {
         userController.postUser(req, res, function(err, user) {
             if (err) {
                 res.status(400).send(err);
@@ -44,18 +49,4 @@ module.exports = function(app, passport) {
     // ============================================
 
 
-
-    // ============================================
-    // Test Routes (Delete later)
-    // ============================================
-    
-    
-    
-    app.post(
-        '/test',
-        [urlEncodedParser, jwtAuth],
-        function(req, res) {
-            if (jwtAuth.isAuthenticated(req, res)) res.json({message:"something cool"});
-        }
-    );
 }

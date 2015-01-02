@@ -22,7 +22,7 @@ require('./app/controllers/passport') (app, passport);
 // Setup Routes
 // ============================================
 /* Utility Routes */
-require('./app/routes/userAuthentication') (app, passport);
+require('./app/routes/userAuthentication') (app, passport, express);
 
 /* API Routes */
 require('./app/routes/userAccount') (app, express);

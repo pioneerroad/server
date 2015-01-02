@@ -7,16 +7,22 @@ var bcrypt   = require('bcrypt-nodejs');
 
 // define the schema for our user model
 var UserSchema = mongoose.Schema({
-    basic            : {
-        username     : {type: String, unique: true},
-        password     : {type: String}
+    basic               : {
+        username        : {type: String, unique: true},
+        password        : {type: String}
     },
-    facebook         : {
-        id           : String,
-        token        : String,
-        email        : String,
-        name         : String
-    }
+    facebook            : {
+        id              : String,
+        token           : String,
+        email           : String,
+        name            : String
+    },
+    userData            : {
+        firstName       : {type: String},
+        surname         : {type: String},
+        gender          : {type: String},
+        dob             : {type: Date}
+    }       
 });
 
 // Defines hook that will be called on save user. This checks if password needs to be hashed and returns hashed password to be stored.
