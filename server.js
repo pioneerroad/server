@@ -1,6 +1,7 @@
 var express = require('express');
 var app = express();
 var passport = require('passport');
+var http = require('http');
 var https = require('https');
 var morgan = require('morgan');
 var mongoose = require('mongoose');

@@ -45,7 +45,7 @@ module.exports = function(app, express) {
         [urlEncodedParser, jwtAuth],
     function(req, res) {
         if (jwtAuth.isAuthenticated(req, res)) {
-           User.findById(req.user._id, 'userData' ,function(err, user) {
+           User.findById(req.user._id, 'userData', function(err, user) {
                if (err) { res.send(err)
                } else {
                    res.json(user);
@@ -70,7 +70,6 @@ module.exports = function(app, express) {
                
                user.save(function(err) {
                    if (err) res.send(err);
-                   
                    res.json(user);
                }); 
         });
@@ -82,7 +81,7 @@ module.exports = function(app, express) {
         [urlEncodedParser, jwtAuth],
     function(req, res) {
         if (jwtAuth.isAuthenticated(req, res)) {
-           User.findById(req.user._id, 'basic' ,function(err, user) {
+           User.findById(req.user._id, 'basic', function(err, user) {
                if (err) { res.send(err)
                } else {
                    res.json(user);

@@ -1,5 +1,5 @@
 // app/routes/userProfile.js
-// Routes for handling fetch (GET) and update (PUT/POST) of user profile details (eg. username and password)
+// Routes for handling fetch (GET) and update (PUT/POST) of user profile data
 // Note: 
 // GET and PUT routes can be accessed by owner of profile.
 // GET routes for full profile to be accessed by owner of profile and friends of owner (need authenticated and authorized user)
@@ -16,7 +16,7 @@ var User = require('../models/user');
 module.exports = function(app, express) {
     var router = express.Router();
 
-    router.post('/endpoint', function(req, res) {
+    router.get('/endpoint', function(req, res) {
         res.json({message:'Something sooooo coool just happened!'});
     });
     

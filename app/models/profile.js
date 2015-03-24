@@ -1,11 +1,12 @@
 // @file profile.js
 
-// app/models/user.js
+// app/models/profile.js
 // load the things we need
 var mongoose = require('mongoose');
 
 // define the schema for our user model
 var ProfileSchema = mongoose.Schema({
+    userId : String,
     basic                   : {
         fullName            : {type: String}, // Display name for profile eg. John and Jane Citizen
         profilePhoto        : {type: String}, // URI of stored profile photo
