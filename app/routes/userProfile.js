@@ -8,17 +8,21 @@
 var jwtAuth = require('../controllers/jwtAuth');
 var jwtToken = require('../controllers/jwtGenerate');
 var bodyParser = require('body-parser');
-var userController = require('../controllers/userController')
+var userController = require('../controllers/userController');
 
-var urlEncodedParser = bodyParser.urlencoded({extended: false});
+var urlEncodedParser = bodyParser.urlencoded({
+	extended: false
+});
 var User = require('../models/user');
 
 module.exports = function(app, express) {
-    var router = express.Router();
+	var router = express.Router();
 
-    router.get('/endpoint', function(req, res) {
-        res.json({message:'Something sooooo coool just happened!'});
-    });
-    
-    app.use('/api/v1/user/profile', router);
-}
+	router.get('/endpoint', function(req, res) {
+		res.json({
+			message: 'Something sooooo coool just happened!'
+		});
+	});
+
+	app.use('/api/v1/user/profile', router);
+};

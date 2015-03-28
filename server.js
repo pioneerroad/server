@@ -17,17 +17,17 @@ mongoose.connect(configDB.url); // connect to our database
 
 /* Passport */
 app.use(passport.initialize());
-require('./app/controllers/passport') (app, passport);
+require('./app/controllers/passport')(app, passport);
 
 // ============================================
 // Setup Routes
 // ============================================
 /* Utility Routes */
-require('./app/routes/userAuthentication') (app, passport, express);
+require('./app/routes/userAuthentication')(app, passport, express);
 
 /* API Routes */
-require('./app/routes/userAccount') (app, express);
-require('./app/routes/userProfile') (app, express);
+require('./app/routes/userAccount')(app, express);
+require('./app/routes/userProfile')(app, express);
 
 // ============================================
 // Server Config

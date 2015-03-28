@@ -3,7 +3,7 @@
 // app/models/user.js
 // load the things we need
 var mongoose = require('mongoose');
-var bcrypt   = require('bcrypt-nodejs');
+var bcrypt   = require('bcryptjs');
 
 // define the schema for our user model
 var UserSchema = mongoose.Schema({
@@ -43,10 +43,10 @@ UserSchema.pre('save', function(callback) {
 
 UserSchema.methods.verifyPassword = function(password, fn) {
     bcrypt.compare(password, this.basic.password, function(err, isMatch) {
-        if (err) { return callback(err) };
+        if (err) { return callback(err); }
         fn(null, isMatch);
     });
-}
+};
 
 // create the model for users and expose it to our app
 module.exports = mongoose.model('User', UserSchema);

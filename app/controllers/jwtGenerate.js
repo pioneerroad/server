@@ -8,19 +8,19 @@ var jwtSecret = require('../../instanceConfig/jwtSecret').secret;
 
 module.exports = function(app, user) {
     app.set('jwtTokenSecret', jwtSecret);
-    
+
     var token = jwt.encode({
         iss: user.id,
         exp: expires
     }, app.get('jwtTokenSecret'));
- 
+
     var response = {
-        token : token,
+        token: token,
         expires: expires,
         user: {
-            id : user.id,
-            username : user.username
+            id: user.id,
+            username: user.username
         }
     };
-    return response;    
-}
+    return response;
+};

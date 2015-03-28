@@ -3,7 +3,7 @@
 var User = require('../models/user');
 
 var userActions = {
-    postUser : function(req, res, fn) {
+    postUser: function(req, res, fn) {
         var user = new User({
             basic: {
                 username: req.body.username,
@@ -12,10 +12,12 @@ var userActions = {
         });
 
         user.save(function(err) {
-            if (err) { return fn(err, null) };
+            if (err) {
+                return fn(err, null);
+            }
             return fn(null, user);
         });
     }
-}
+};
 
 module.exports = userActions;
