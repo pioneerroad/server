@@ -31,9 +31,9 @@ UserSchema.pre('save', function(callback) {
     if (!user.isModified('basic.password')) return callback();
 
     bcrypt.genSalt(5, function(err, salt) {
-        if (err) return callback(err);
+        if (err) { return callback(err); }
         
-        bcrypt.hash(user.basic.password, salt, null, function(err, hash) {
+        bcrypt.hash(user.basic.password, salt, function(err, hash) {
             if (err) return (callback(err));
             user.basic.password = hash;
             callback();
