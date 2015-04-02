@@ -14,7 +14,7 @@ var User = require('../models/user');
 module.exports = function(app, express) {
     var router = express.Router();
 
-    app.use('/api/v1/user/account', router); // Register root URI for account-related routes
+    app.use('/api/v1/user/', router); // Register root URI for account-related routes
 
     // Create a new user Account
     router.post('/create', urlEncodedParser, function(req, res, next) {

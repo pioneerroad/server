@@ -21,7 +21,7 @@ module.exports = function(app, passport, express) {
 
     // Authenticate a user (basic strategy)
     router.post(
-        '/basic/authenticate',
+        '/login',
         passport.authenticate('basic-login', {
             session: false
         }),
