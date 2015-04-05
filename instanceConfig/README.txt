@@ -1,0 +1,1 @@
+This directory should be ignored by GIT because it contains configuration instructions specific to a given instance of the server. Eg. ports, SSL certificates, database config, etc will probably be different depending on where the server is hosted.  
