@@ -4,13 +4,13 @@ var fs = require('fs');
 
 var settings = {
     options: {
-        key : fs.readFileSync('./instanceConfig/SSLCertificate/key.pem'),
-        cert: fs.readFileSync('./instanceConfig/SSLCertificate/cert.pem')
+        key : fs.readFileSync(__dirname+'/SSLCertificate/key.pem'),
+        cert: fs.readFileSync(__dirname+'/SSLCertificate/cert.pem')
     },
     ports: {
         SSLPort: 8090,
         noSSLPort: 8080
-    }   
+    }
 }
 
 module.exports = settings;

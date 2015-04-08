@@ -20,8 +20,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
  * Initialise Routes
  * */
 var routeRoot = '/api/v1';
-var indexRoutes = require('./app/routes/index');
-var userRoutes = require('./app/routes/user');
+var indexRoutes = require('./routes/index');
+var userRoutes = require('./routes/user');
 
 app.use(routeRoot, indexRoutes);
 app.use(routeRoot, userRoutes);
@@ -36,13 +36,13 @@ app.use(function(req, res, next) {
 /**
  *  Load models
  * */
-var models = require('./app/models');
+var models = require(__dirname + '/models');
 
 /**
  * Load server configuration
  */
 
-var serverConfig = require('./instanceConfig/serverConfig');
+var serverConfig = require(__dirname + '/config/serverConfig');
 var options = serverConfig.options;
 var ports = serverConfig.ports;
 

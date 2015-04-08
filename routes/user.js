@@ -1,12 +1,11 @@
-var models = require('../models');
+var models = require(__dirname + '/../models');
 var express = require('express');
 var router  = express.Router();
 
 router.post('/user/create', function(req, res) {
-    console.log(req);
     models.User.create({
         username: req.body.username,
-        password: req.body.password
+        password: req.body.password,
     }).then(function() {
         res.json({message:"Created a user"});
     });
