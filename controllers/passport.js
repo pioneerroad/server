@@ -1,10 +1,9 @@
-// app/passport.js
+// controllers/passport.js
 // Configure passport strategies for local and Facebook signup/login
-
 var BasicStrategy = require('passport-http').BasicStrategy;
 var FacebookTokenStrategy = require('passport-facebook-token').Strategy;
-var User = require('../models/user');
-var authConfig = require('../../instanceConfig/authConfig');
+var models = require(__dirname+'/../models');
+//var authConfig = require('../../instanceConfig/authConfig');
 
 module.exports = function(app, passport) {
 
@@ -15,12 +14,8 @@ module.exports = function(app, passport) {
     /* Basic Login */
     passport.use('basic-login', new BasicStrategy({},
         function(username, password, done) {
-            User.findOne({
-                'basic.username': username
-            }, function(err, user) {
-                if (err) {
-                    return done(err);
-                } // If error
+            models.User.find({
+                where: {username: username} }).then(function(user) {
                 if (!user) {
                     return done(null, {
                         error: 'USER_NOT_FOUND'

@@ -1,11 +1,11 @@
 // @file jwtauth.js
 
 var url = require('url');
-var User = require('../models/user');
+var models = require(__dirname+'/../models');
 var express = require('express');
 var app = express();
 var jwt = require('jwt-simple');
-var jwtSecret = require('../../instanceConfig/jwtSecret').secret;
+var jwtSecret = require(__dirname+'/../config/jwtSecret').secret;
 app.set('jwtTokenSecret', jwtSecret);
 
 module.exports = function(req, res, done) {
@@ -21,9 +21,7 @@ module.exports = function(req, res, done) {
                 res.end('Access token has expired', 400);
             }
 
-            User.findOne({
-                '_id': decoded.iss
-            }, function(err, user) { // Try to fetch a user from the database using the User ID (_id) encoded in the token
+            models.User.find(decoded.iss).then(function(err, user) { // Try to fetch a user from the database using the User ID (_id) encoded in the token
                 if (err) {
                     return done(err);
                 }
