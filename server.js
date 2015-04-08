@@ -11,7 +11,8 @@ var logger = require('morgan');
 /**
  * Initialise components and middleware
  * */
-
+app.use(passport.initialize());
+require (__dirname + '/controllers/passport') (app, passport);
 app.use(logger('dev')); // Logs calls to Express routes to terminal
 app.use(bodyParser.json()); // Use body-parser to extract data from POST
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -21,7 +22,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
  * */
 var routeRoot = '/api/v1';
 var indexRoutes = require('./routes/index');
-var userRoutes = require('./routes/user');
+var userRoutes = require('./routes/user') (app, passport);
 
 app.use(routeRoot, indexRoutes);
 app.use(routeRoot, userRoutes);
