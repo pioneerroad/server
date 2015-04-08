@@ -1,40 +1,55 @@
+"use strict"
+
 var express = require('express');
 var app = express();
+var bodyParser = require('body-parser');
 var passport = require('passport');
 var http = require('http');
 var https = require('https');
-var morgan = require('morgan');
-var mongoose = require('mongoose');
+var logger = require('morgan');
 
-// ============================================
-// Initialise Components
-// ============================================
-app.use(morgan('dev')); // Logs calls to Express routes to terminal
+/**
+ * Initialise components and middleware
+ * */
 
-// Connect to an instance of MongoDB
-var configDB = require('./instanceConfig/dbConfig');
-mongoose.connect(configDB.url); // connect to our database
+app.use(logger('dev')); // Logs calls to Express routes to terminal
+app.use(bodyParser.json()); // Use body-parser to extract data from POST
+app.use(bodyParser.urlencoded({ extended: false }));
 
-/* Passport */
-app.use(passport.initialize());
-require('./app/controllers/passport')(app, passport);
+/**
+ * Initialise Routes
+ * */
+var routeRoot = '/api/v1';
+var indexRoutes = require('./app/routes/index');
+var userRoutes = require('./app/routes/user');
 
-// ============================================
-// Setup Routes
-// ============================================
-/* Utility Routes */
-require('./app/routes/userAuthentication')(app, passport, express);
+app.use(routeRoot, indexRoutes);
+app.use(routeRoot, userRoutes);
 
-/* API Routes */
-require('./app/routes/userAccount')(app, express);
-require('./app/routes/userProfile')(app, express);
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+    var err = new Error('Not Found');
+    err.status = 404;
+    next(err);
+});
 
-// ============================================
-// Server Config
-// ============================================
+/**
+ *  Load models
+ * */
+var models = require('./app/models');
+
+/**
+ * Load server configuration
+ */
 
 var serverConfig = require('./instanceConfig/serverConfig');
 var options = serverConfig.options;
 var ports = serverConfig.ports;
 
-var httpsServer = https.createServer(options, app).listen(ports.SSLPort); // Start the server
+/**
+ * Synchronise models and launch server
+ * */
+
+models.sequelize.sync().then(function () {
+    var httpsServer = https.createServer(options, app).listen(ports.SSLPort); // Start the server
+});

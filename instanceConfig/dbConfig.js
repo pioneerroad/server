@@ -2,7 +2,7 @@
 // Exposes MongoDB connection string
 
 var dbConfig = {
-    url : 'mongodb://localhost:27017/pioneerroad'
+    connectionParameters : 'postgres://postgres:9bFIDKcyNl!@localhost/app'
 }
 
 module.exports = dbConfig;
