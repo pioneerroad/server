@@ -6,9 +6,12 @@ var passport = require('passport');
 
 module.exports = function(app, passport) {
     router.post('/user/create', function(req, res) {
+        console.log(req.body);
         models.User.create({
             username: req.body.username,
-            password: req.body.password
+            password: req.body.password,
+            mail: req.body.mail,
+            cell: req.body.cell
         }).then(function() {
             res.json({message:"Created a user"});
         });
