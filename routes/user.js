@@ -71,11 +71,6 @@ module.exports = function(passport) {
             }
         }
     );
-    /**
-     * TEST ONLY*/
-    router.get('/user', function(req, res) {
-        res.json({message:"a user route"});
-    });
 
     return router;
 };
