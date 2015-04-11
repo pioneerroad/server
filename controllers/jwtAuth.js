@@ -13,7 +13,6 @@ module.exports = function(req, res, done) {
     var token = (req.body && req.body.access_token) || parsedURL.query.access_token || req.headers["x-access-token"];
 
     if (token) {
-
         try {
             var decoded = jwt.decode(token, app.get('jwtTokenSecret')); // Decode the token
 
@@ -40,9 +39,10 @@ module.exports = function(req, res, done) {
 };
 
 // Helper function to call from middleware to check if user is Authenticated
-module.exports.isAuthenticated = function(req, res) {
-    if (!req.user) res.status(401).send({
-        message: 'Not Authorised'
-    });
+module.exports.isAuthenticated = function(req, res, done) {
+    if (!req.user) {
+        res.status(401).json({message:'Not Authorised'});
+        return false;
+    }
     return true;
 };
