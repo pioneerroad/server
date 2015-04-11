@@ -4,12 +4,34 @@ var bcrypt = require('bcryptjs');
 
 module.exports = function(sequelize, DataTypes) {
   var User = sequelize.define("User", {
-    username: DataTypes.STRING,
-    password: DataTypes.STRING,
-    mail: DataTypes.STRING,
-    cell: DataTypes.STRING
-  }, {
-    classMethods: {
+    username: {
+      type: DataTypes.STRING, allowNull: false, unique: true, validate:
+        { isAlphanumeric: true, stringLength: function(value) {
+          if (value.length > 12 ) {
+            throw new Error("Username too long");
+          }
+        }}
+      },
+    password: {
+      type: DataTypes.STRING, allowNull: false, validate: {
+        is : {args: /^.*(?=.{8,})(?=.*d)(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).*$/, msg: 'Password not strong enough'}
+      }
+    },
+    mail: {
+      type: DataTypes.STRING, allowNull: false, unique: true, validate: {
+        isEmail: true
+      }
+    },
+    cell: {
+      type: DataTypes.STRING, allowNull: false, validate: {
+        isNumeric: true
+      }
+    },
+    status: {
+      type: DataTypes.INTEGER, allowNull: false, defaultValue: 0
+      }
+    },
+    {classMethods: {
       associate: function(models) {
         // associations can be defined here
       },

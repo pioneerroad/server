@@ -22,7 +22,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
  * */
 var routeRoot = '/api/v1';
 var indexRoutes = require('./routes/index');
-var userRoutes = require('./routes/user') (app, passport);
+var userRoutes = require('./routes/user') (passport);
 
 app.use(routeRoot, indexRoutes);
 app.use(routeRoot, userRoutes);
