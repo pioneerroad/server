@@ -34,6 +34,20 @@ module.exports = function(passport) {
             }
         }
     );
+
+    /**
+     * @todo Need to verify email address and password after update */
+    router.put(
+        '/user/update/:uid',
+        function (req, res) {
+            models.User.update(req.body,
+                { where: {id:req.params.uid}}).then(function(user) {
+                    res.json('success');
+                }).catch(function(user) {
+                    res.json('error');
+                });
+        }
+    );
     /**
      * TEST ONLY*/
     router.get('/user', function(req, res) {
