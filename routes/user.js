@@ -48,8 +48,8 @@ module.exports = function(passport) {
                     }).catch(function(err) {
                         res.status(400).json(err);
                     });
-
-        }}
+            }
+        }
     );
     /**
      * TEST ONLY*/
