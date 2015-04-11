@@ -12,7 +12,9 @@ module.exports = function(passport) {
             mail: req.body.mail,
             cell: req.body.cell
         }).then(function() {
-            res.json({"USER_CREATE":true});
+            res.status(200).json({message:"User Created"});
+        }).error(function(err) {
+            res.status(400).json(err);
         });
     });
 
@@ -39,4 +41,4 @@ module.exports = function(passport) {
     });
 
     return router;
-}
+};

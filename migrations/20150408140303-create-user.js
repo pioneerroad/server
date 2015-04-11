@@ -9,10 +9,28 @@ module.exports = {
         type: DataTypes.INTEGER
       },
       username: {
-        type: DataTypes.STRING
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true
       },
       password: {
-        type: DataTypes.STRING
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      mail: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true
+      },
+      cell: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true
+      },
+      status: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
       },
       createdAt: {
         allowNull: false,
