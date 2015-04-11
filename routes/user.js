@@ -1,13 +1,13 @@
-var models = require(__dirname + '/../models');
 var jwtToken = require(__dirname + '/../controllers/jwtGenerate');
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
 var express = require('express');
 var router  = express.Router();
 var passport = require('passport');
 
-module.exports = function(passport) {
+module.exports = function(app, passport) {
+    var User = app.get('models').User;
     router.post('/user/create', function(req, res) {
-        models.User.create({
+        User.create({
             username: req.body.username,
             password: req.body.password,
             mail: req.body.mail,
@@ -45,7 +45,7 @@ module.exports = function(passport) {
       '/user/fetch/:uid', [jwtAuth],
         function(req, res) {
             if (jwtAuth.isAuthenticated(req, res)) {
-                models.User.find(req.params.uid).then(function(user) {
+                User.find(req.params.uid).then(function(user) {
                     if (user) {
                         res.status(200).json(user);
                     } else {
@@ -62,7 +62,7 @@ module.exports = function(passport) {
         '/user/update/:uid', [jwtAuth],
         function (req, res) {
             if (jwtAuth.isAuthenticated(req, res)) {
-                models.User.update(req.body,
+                User.update(req.body,
                     { where: {id:req.params.uid}, individualHooks: true, returning:true, limit:1}).then(function(numRows) {
                         res.status(200).json(numRows);
                     }).catch(function(err) {

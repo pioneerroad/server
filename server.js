@@ -9,6 +9,12 @@ var https = require('https');
 var logger = require('morgan');
 
 /**
+ *  Load models
+ * */
+var models = require(__dirname+'/models');
+app.set('models', models);
+
+/**
  * Initialise components and middleware
  * */
 app.use(passport.initialize());
@@ -22,7 +28,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
  * */
 var routeRoot = '/api/v1';
 var indexRoutes = require('./routes/index');
-var userRoutes = require('./routes/user') (passport);
+var userRoutes = require('./routes/user') (app, passport);
 
 app.use(routeRoot, indexRoutes);
 app.use(routeRoot, userRoutes);
@@ -33,11 +39,6 @@ app.use(function(req, res, next) {
     err.status = 404;
     next(err);
 });
-
-/**
- *  Load models
- * */
-var models = require(__dirname + '/models');
 
 /**
  * Load server configuration
