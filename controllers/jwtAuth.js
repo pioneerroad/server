@@ -21,15 +21,14 @@ module.exports = function(req, res, done) {
                 res.end('Access token has expired', 400);
             }
 
-            models.User.find(decoded.iss).then(function(err, user) { // Try to fetch a user from the database using the User ID (_id) encoded in the token
-                if (err) {
-                    return done(err);
-                }
-                if (!user) {
-                    return done(false);
+            models.User.find(decoded.iss).then(function(user) { // Try to fetch a user from the database using the User ID (_id) encoded in the token
+                if(!user) {
+                    done(false);
                 }
                 req.user = user;
-                return done();
+                done();
+            }).catch(function(err) {
+                done(err);
             });
 
         } catch (err) {
