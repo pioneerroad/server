@@ -37,6 +37,26 @@ module.exports = function(passport) {
     );
 
     /**
+     * Get a single user with UID
+     * Note: should only be used for loading a user's own account; different methods required to load other user profiles.
+     * @todo compare requested uid with uid encoded in JWT for match */
+
+    router.get(
+      '/user/fetch/:uid', [jwtAuth],
+        function(req, res) {
+            if (jwtAuth.isAuthenticated(req, res)) {
+                models.User.find(req.params.uid).then(function(user) {
+                    if (user) {
+                        res.status(200).json(user);
+                    } else {
+                        res.json({message:"User not found"});
+                    }
+                });
+            }
+        }
+    );
+
+    /**
      * @todo Need to verify email address and password after update */
     router.put(
         '/user/update/:uid', [jwtAuth],
