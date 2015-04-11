@@ -4,7 +4,7 @@ var express = require('express');
 var router  = express.Router();
 var passport = require('passport');
 
-module.exports = function(app, passport) {
+module.exports = function(passport) {
     router.post('/user/create', function(req, res) {
         console.log(req.body);
         models.User.create({
@@ -28,7 +28,7 @@ module.exports = function(app, passport) {
                 return false;
             }
             if (req.user) { // Username and password OK, give the user a token
-                var token = jwtToken(app, req.user);
+                var token = jwtToken(req.app, req.user);
                 res.status(200).send(token);
             }
         }
