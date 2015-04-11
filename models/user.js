@@ -54,6 +54,13 @@ module.exports = function(sequelize, DataTypes) {
               fn(null, user); // Return updated user model through callback
           });
         })
+      },
+      beforeUpdate: function(user, options, fn) {
+        bcrypt.hash(user.password, salt, function(err, hash) {
+          if (err) { return err; }
+          user.password = hash; // Overwrite plain password with hashed version
+          fn(null, user); // Return updated user model through callback
+        });
       }
     }
   });
