@@ -12,8 +12,8 @@ module.exports = function(passport) {
             password: req.body.password,
             mail: req.body.mail,
             cell: req.body.cell
-        }).then(function() {
-            res.status(200).json({message:"User Created"});
+        }).then(function(user) {
+            res.status(200).json(user);
         }).error(function(err) {
             res.status(400).json(err);
         });
