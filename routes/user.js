@@ -1,5 +1,6 @@
 var models = require(__dirname + '/../models');
 var jwtToken = require(__dirname + '/../controllers/jwtGenerate');
+var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
 var express = require('express');
 var router  = express.Router();
 var passport = require('passport');
@@ -11,8 +12,8 @@ module.exports = function(passport) {
             password: req.body.password,
             mail: req.body.mail,
             cell: req.body.cell
-        }).then(function() {
-            res.status(200).json({message:"User Created"});
+        }).then(function(user) {
+            res.status(200).json(user);
         }).error(function(err) {
             res.status(400).json(err);
         });
@@ -38,15 +39,17 @@ module.exports = function(passport) {
     /**
      * @todo Need to verify email address and password after update */
     router.put(
-        '/user/update/:uid',
+        '/user/update/:uid', [jwtAuth],
         function (req, res) {
-            models.User.update(req.body,
-                { where: {id:req.params.uid}}).then(function(user) {
-                    res.json('success');
-                }).catch(function(user) {
-                    res.json('error');
-                });
-        }
+            if (jwtAuth.isAuthenticated(req, res)) {
+                models.User.update(req.body,
+                    { where: {id:req.params.uid}, individualHooks: true, returning:true, limit:1}).then(function(numRows) {
+                        res.status(200).json(numRows);
+                    }).catch(function(err) {
+                        res.status(400).json(err);
+                    });
+
+        }}
     );
     /**
      * TEST ONLY*/
