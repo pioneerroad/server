@@ -61,13 +61,17 @@ module.exports = function(app, passport) {
     router.put(
         '/user/update/:uid', [jwtAuth],
         function (req, res) {
-            if (jwtAuth.isAuthenticated(req, res)) {
-                User.update(req.body,
-                    { where: {id:req.params.uid}, individualHooks: true, returning:true, limit:1}).then(function(numRows) {
-                        res.status(200).json(numRows);
-                    }).catch(function(err) {
-                        res.status(400).json(err);
-                    });
+            if (user = jwtAuth.isAuthenticated(req, res)) {
+                if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */
+                    User.update(req.body,
+                        { where: {id:req.params.uid}, individualHooks: true, returning:true, limit:1}).then(function(numRows) {
+                            res.status(200).json(numRows);
+                        }).catch(function(err) {
+                            res.status(400).json(err);
+                        });
+                } else {
+                    res.status(400).json({message:"User may only update their own profile"});
+                }
             }
         }
     );

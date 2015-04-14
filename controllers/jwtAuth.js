@@ -44,5 +44,5 @@ module.exports.isAuthenticated = function(req, res, done) {
         res.status(401).json({message:'Not Authorised'});
         return false;
     }
-    return true;
+    return req.user;
 };
