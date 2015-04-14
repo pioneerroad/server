@@ -47,13 +47,18 @@ module.exports = function(sequelize, DataTypes) {
     },
     hooks: {
       beforeUpdate: function(user, options, fn) {
-        bcrypt.genSalt(5, function(err, salt) {
-          bcrypt.hash(user.password, salt, function(err, hash) {
-            if (err) { return err; }
-            user.password = hash; // Overwrite plain password with hashed version
-            fn(null, user); // Return updated user model through callback
+        if (user.password != user._previousDataValues.password) { /* If new password was passed in*/
+          bcrypt.genSalt(5, function(err, salt) {
+            bcrypt.hash(user.password, salt, function(err, hash) {
+              if (err) { return err; }
+              user.password = hash; // Overwrite plain password with hashed version
+              fn(null, user); // Return updated user model through callback
+            });
           });
-        });
+        } else {
+          user.password = user._previousDataValues.password; /* Rewrite previous has to user password field before storing */
+          fn(null, user);
+        }
       },
       beforeCreate: function(user, options, fn) {
         bcrypt.genSalt(5, function(err, salt) {
