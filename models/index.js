@@ -25,6 +25,9 @@ Object.keys(db).forEach(function(modelName) {
   }
 });
 
+/* Set up associations */
+db.User.hasOne(db.Profile);
+
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 

@@ -29,9 +29,11 @@ app.use(bodyParser.urlencoded({ extended: false }));
 var routeRoot = '/api/v1';
 var indexRoutes = require('./routes/index');
 var userRoutes = require('./routes/user') (app, passport);
+var profileRoutes = require('./routes/profile') (app);
 
 app.use(routeRoot, indexRoutes);
 app.use(routeRoot, userRoutes);
+app.use(routeRoot, profileRoutes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
