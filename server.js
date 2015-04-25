@@ -1,6 +1,7 @@
 "use strict"
 
 var express = require('express');
+var cors = require('cors');
 var app = express();
 var bodyParser = require('body-parser');
 var passport = require('passport');
@@ -17,6 +18,7 @@ app.set('models', models);
 /**
  * Initialise components and middleware
  * */
+app.use(cors());
 app.use(passport.initialize());
 require (__dirname + '/controllers/passport') (app, passport);
 app.use(logger('dev')); // Logs calls to Express routes to terminal
@@ -55,5 +57,9 @@ var ports = serverConfig.ports;
  * */
 
 models.sequelize.sync().then(function () {
-    var httpsServer = https.createServer(options, app).listen(ports.SSLPort); // Start the server
+    var server = app.listen(3000, function() {
+      var host = server.address().address;
+      var port = server.address().port;
+      console.log('Listening at http: ' + port);
+    }); // Start the server
 });
