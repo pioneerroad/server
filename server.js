@@ -57,7 +57,7 @@ var ports = serverConfig.ports;
  * */
 
 models.sequelize.sync().then(function () {
-    var server = app.listen(3000, function() {
+    var server = app.listen(ports.noSSLPort, function() {
       var host = server.address().address;
       var port = server.address().port;
       console.log('Listening at http: ' + port);
