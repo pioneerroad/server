@@ -17,18 +17,35 @@ module.exports = function(sequelize, DataTypes) {
         is : {args: /^.*(?=.{8,})(?=.*d)(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).*$/, msg: 'Password not strong enough'}
       }
     },
+    type: {
+      type: DataTypes.ENUM, values:['user','business'],
+      allowNull: false,
+      defaultValue: 'user'
+    },
     mail: {
       type: DataTypes.STRING, allowNull: false, unique: true, validate: {
         isEmail: true
       }
+    },
+    mailVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue:false,
+      comment: "Flag to indicate mail verification status"
     },
     cell: {
       type: DataTypes.STRING, allowNull: false, validate: {
         isNumeric: true
       }
     },
+    cellVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue:false,
+      comment: "Flag to indicate cell number verification status"
+    },
     status: {
-      type: DataTypes.INTEGER, allowNull: false, defaultValue: 0
+      type: DataTypes.ENUM, values:['preactive','active','blocked','suspended','userDeleted'],
+      allowNull: false,
+      defaultValue: 'preactive'
       }
     },
     {classMethods: {
@@ -68,8 +85,12 @@ module.exports = function(sequelize, DataTypes) {
               fn(null, user); // Return updated user model through callback
           });
         });
+      },
+      afterCreate: function(user, fn) {
+
       }
     }
   });
+
   return User;
 };

@@ -1,21 +1,18 @@
 module.exports = function(sequelize, DataTypes) {
-    var Profile = sequelize.define("Profile", {
-            pid: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-                unique: true,
-                primaryKey: true,
-                autoIncrement: true
-            },
-            basic: {
-                type: DataTypes.JSONB
-            },
-            vehicle: {
-                type: DataTypes.JSONB
-            },
-            extended: {
-                type: DataTypes.JSONB
-            }
-        });
-    return Profile;
+    var UserProfile = sequelize.define("UserProfile", {
+        fullName: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        homeTown: {
+            type: DataTypes.INTEGER,
+            references: 'Areas',
+            referenceKey: 'id'
+        },
+        misc: {
+            type: DataTypes.JSONB
+        }
+    });
+
+    return UserProfile;
 };

@@ -56,7 +56,11 @@ var ports = serverConfig.ports;
  * Synchronise models and launch server
  * */
 
-models.sequelize.sync().then(function () {
+models.sequelize.sync({force:true}).then(function () {
+    // Yucky, yucky things we have to put here... yearhk..
+    models.sequelize.query('ALTER TABLE "Areas" ADD COLUMN geom POINT');
+    models.sequelize.query('ALTER TABLE "States" ADD COLUMN geom POLYGON');
+
     var server = app.listen(ports.noSSLPort, function() {
       var host = server.address().address;
       var port = server.address().port;
