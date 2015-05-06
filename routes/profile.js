@@ -59,11 +59,35 @@ module.exports = function(app, passport) {
         }
     );
 
+    /** Add profile data */
+    /** @todo ensure only one profile can be created per user ID */
+    router.post(
+      '/user/:uid/profile/create/', [jwtAuth],
+        function (req, res) {
+            if (user = jwtAuth.isAuthenticated(req, res)) {
+                if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */
+                    console.log(req.body);
+                    Profile.create({
+                        fullName: req.body.fullname,
+                        homeTown: req.body.hometown,
+                        userId: user.id
+                    }).then(function(profile) {
+                        res.status(200).json(profile);
+                    }).error(function(err) {
+                        res.status(400).json(err);
+                    });
+                } else {
+                    res.status(400).json({message:"User may only create their own profile"});
+                }
+            }
+        }
+    );
+
     /** Endpoint for hometown selection (autosuggest on client) */
     router.get(
      '/town/select/:input', function(req, res) {
             var test = app.get('models');
-            var testing = test.sequelize.query("SELECT * FROM towns WHERE label LIKE '%"+req.params.input+"%'", {type: test.sequelize.QueryTypes.SELECT}).then(function (towns, err) {
+            var testing = test.sequelize.query("SELECT * FROM towns WHERE label ILIKE '%"+req.params.input+"%'", {type: test.sequelize.QueryTypes.SELECT}).then(function (towns, err) {
                 if (towns) {
                     res.status(200).json(towns);
                 } else {
