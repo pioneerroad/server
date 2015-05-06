@@ -11,16 +11,14 @@ app.set('jwtTokenSecret', jwtSecret);
 module.exports = function(req, res, done) {
     var parsedURL = url.parse(req.url, true);
     var token = (req.body && req.body.access_token) || parsedURL.query.access_token || req.headers["x-access-token"];
-
     if (token) {
         try {
             var decoded = jwt.decode(token, app.get('jwtTokenSecret')); // Decode the token
-
             if (decoded.exp <= Date.now()) { // Make sure it hasn't expired
                 res.end('Access token has expired', 400);
             }
 
-            models.User.find(decoded.iss).then(function(user) { // Try to fetch a user from the database using the User ID (_id) encoded in the token
+            models.user.find(decoded.iss).then(function(user) { // Try to fetch a user from the database using the User ID (_id) encoded in the token
                 if(!user) {
                     done(false);
                 }

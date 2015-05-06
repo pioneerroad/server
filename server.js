@@ -32,10 +32,12 @@ var routeRoot = '/api/v1';
 var indexRoutes = require('./routes/index');
 var userRoutes = require('./routes/user') (app, passport);
 var profileRoutes = require('./routes/profile') (app);
+var vehicleRoutes = require('./routes/vehicle') (app);
 
 app.use(routeRoot, indexRoutes);
 app.use(routeRoot, userRoutes);
 app.use(routeRoot, profileRoutes);
+app.use(routeRoot, vehicleRoutes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -56,10 +58,11 @@ var ports = serverConfig.ports;
  * Synchronise models and launch server
  * */
 
-models.sequelize.sync({force:true}).then(function () {
+models.sequelize.sync().then(function () {
     // Yucky, yucky things we have to put here... yearhk..
-    models.sequelize.query('ALTER TABLE "Areas" ADD COLUMN geom POINT');
-    models.sequelize.query('ALTER TABLE "States" ADD COLUMN geom POLYGON');
+    //models.sequelize.query('ALTER TABLE "areas" ADD COLUMN geog GEOGRAPHY(point, 4326)');
+    //models.sequelize.query('ALTER TABLE "places" ADD COLUMN the_geog GEOGRAPHY(point, 4326)');
+    //models.sequelize.query('ALTER TABLE "states" ADD COLUMN geog GEOGRAPHY(multipolygon, 4326)');
 
     var server = app.listen(ports.noSSLPort, function() {
       var host = server.address().address;

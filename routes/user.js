@@ -5,7 +5,7 @@ var router  = express.Router();
 var passport = require('passport');
 
 module.exports = function(app, passport) {
-    var User = app.get('models').User;
+    var User = app.get('models').user;
     router.post('/user/create', function(req, res) {
         User.create({
             username: req.body.username,

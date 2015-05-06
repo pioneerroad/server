@@ -14,7 +14,7 @@ module.exports = function(app, passport) {
     /* Basic Login */
     passport.use('basic-login', new BasicStrategy({},
         function(username, password, done) {
-            models.User.find({
+            models.user.find({
                 where: {username: username} }).then(function(user) {
                 if (!user) {
                     return done(null, {

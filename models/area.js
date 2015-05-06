@@ -1,6 +1,6 @@
 module.exports = function(sequelize, DataTypes) {
-    var Area = sequelize.define("Area", {
-        label: {
+    var Area = sequelize.define("area", {
+        location: {
             type: DataTypes.STRING,
             allowNull: false
         },
@@ -13,10 +13,23 @@ module.exports = function(sequelize, DataTypes) {
             isNumeric: true,
             allowNull: false
         },
-        type: {
+        category: {
             type: DataTypes.ENUM,
             values:['destination','town','region'],
             allowNull: false,
+        },
+        population: {
+            type: DataTypes.INTEGER,
+            allowNull: true
+        },
+        area: {
+            type: DataTypes.FLOAT,
+            allowNull: true
+        },
+        rvFriendly: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
         }
     });
 

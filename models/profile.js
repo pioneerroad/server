@@ -1,12 +1,12 @@
 module.exports = function(sequelize, DataTypes) {
-    var UserProfile = sequelize.define("UserProfile", {
+    var UserProfile = sequelize.define("user_profile", {
         fullName: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: false
         },
         homeTown: {
             type: DataTypes.INTEGER,
-            references: 'Areas',
+            references: 'areas',
             referenceKey: 'id'
         },
         misc: {

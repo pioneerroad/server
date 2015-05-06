@@ -9,7 +9,7 @@ var settings = {
     },
     ports: {
         SSLPort: 8090,
-        noSSLPort: 8080
+        noSSLPort: 8081
     }
 }
 

@@ -5,7 +5,8 @@ var router  = express.Router();
 var passport = require('passport');
 
 module.exports = function(app, passport) {
-    var Profile = app.get('models').Profile;
+    var Profile = app.get('models').user_profile;
+    var Area = app.get('models').area;
 
     /**
      * Get a single user with UID
@@ -17,9 +18,16 @@ module.exports = function(app, passport) {
         function(req, res) {
             if (user = jwtAuth.isAuthenticated(req, res)) {
                 if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested */
-                    Profile.find({where: {UserId: req.params.uid}}).then(function (user) {
-                        if (user) {
-                            res.status(200).json(user);
+                    Profile.find({where: {userId: req.params.uid}}).then(function (profile) {
+                        if (profile) {
+                            Area.find({where: {id: profile.homeTown}}).then(function (area) {
+                                if (area) {
+                                    profile.homeTown = area;
+                                    res.json(profile);
+                                } else {
+                                    res.json({message: 'That town not found'});
+                                }
+                            });
                         } else {
                             res.json({message: "User not found"});
                         }
@@ -50,6 +58,31 @@ module.exports = function(app, passport) {
             }
         }
     );
+
+    /** Endpoint for hometown selection (autosuggest on client) */
+    router.get(
+     '/town/select/:input', function(req, res) {
+            var test = app.get('models');
+            var testing = test.sequelize.query("SELECT * FROM towns WHERE label LIKE '%"+req.params.input+"%'", {type: test.sequelize.QueryTypes.SELECT}).then(function (towns, err) {
+                if (towns) {
+                    res.status(200).json(towns);
+                } else {
+                    res.status(400).json(err);
+                }
+            });
+        }
+    );
+
+    /** Endpoint for privacy
+    router.put(
+
+    ); */
+
+     /** Endpoint for photo upload
+     router.put(
+
+     );
+     */
 
     return router;
 };
