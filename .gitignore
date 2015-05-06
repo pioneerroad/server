@@ -4,3 +4,4 @@ npm-debug.log
 .DS_Store
 notes/
 config/config.json
+config/serverConfig.js
