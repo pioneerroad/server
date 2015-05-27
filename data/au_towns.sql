@@ -32,7 +32,7 @@ CREATE TABLE au_towns (
     population integer,
     area_sqkm numeric(8,2),
     time_zone text,
-    geog geography(Point,4326)
+    geom geometry(Point,4326)
 );
 
 
@@ -70,7 +70,7 @@ ALTER TABLE ONLY au_towns ALTER COLUMN id SET DEFAULT nextval('au_towns_id_seq':
 -- Data for Name: au_towns; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY au_towns (id, location, local_government_area, urban_area, state, postcode, latitude, longitude, category, population, area_sqkm, time_zone, geog) FROM stdin;
+COPY au_towns (id, location, local_government_area, urban_area, state, postcode, latitude, longitude, category, population, area_sqkm, time_zone, geom) FROM stdin;
 8	Abbotsford	Bundaberg	\N	QLD	4670	-24.84369	152.02491	Locality (Unbounded)	\N	\N	AEST (UTC+10:00)	0101000020E6100000FD6A0E10CC00634055F65D11FCD738C0
 108	Aldoga	Gladstone	\N	QLD	4694	-23.83529	151.07133	Locality (Unbounded)	\N	\N	AEST (UTC+10:00)	0101000020E61000002827DA5548E2624004ADC090D5D537C0
 255	Ansons Bay	Break O'Day	\N	TAS	7264	-41.03789	148.26834	Locality	371	776.26	AEST (UTC+10:00)	0101000020E6100000AD86C43D96886240376C5B94D98444C0
@@ -15341,17 +15341,17 @@ ALTER TABLE ONLY au_towns
 
 
 --
--- Name: au_towns_geog_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: au_towns_geom_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace:
 --
 
-CREATE INDEX au_towns_geog_idx ON au_towns USING gist (geog);
+CREATE INDEX au_towns_geom_idx ON au_towns USING gist (geom);
 
 
 --
 -- Name: au_towns_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX au_towns_idx ON au_towns USING gist (geog);
+CREATE INDEX au_towns_idx ON au_towns USING gist (geom);
 
 
 --

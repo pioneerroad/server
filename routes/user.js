@@ -6,6 +6,8 @@ var passport = require('passport');
 
 module.exports = function(app, passport) {
     var User = app.get('models').user;
+    var Privacy = app.get('models').privacy;
+    var Profile = app.get('models').user_profile;
     router.post('/user/create', function(req, res) {
         User.create({
             username: req.body.username,
@@ -13,7 +15,15 @@ module.exports = function(app, passport) {
             mail: req.body.mail,
             cell: req.body.cell
         }).then(function(user) {
-            res.status(200).json(user);
+            Privacy.create({ /* Create a default privacy profile too */
+                userId: user.id
+            }).then(function(privacy) {
+                Profile.create({
+                    userId: user.id
+                }).then(function(profile) {
+                    res.status(200).json(user);
+                })
+            });
         }).error(function(err) {
             res.status(400).json(err);
         });

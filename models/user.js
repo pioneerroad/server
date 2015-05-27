@@ -87,7 +87,7 @@ module.exports = function(sequelize, DataTypes) {
         });
       },
       afterCreate: function(user, fn) {
-
+        console.log(user);
       }
     }
   });

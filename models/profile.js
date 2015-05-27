@@ -2,7 +2,11 @@ module.exports = function(sequelize, DataTypes) {
     var UserProfile = sequelize.define("user_profile", {
         fullName: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: true
+        },
+        profilePhoto: {
+          type: DataTypes.STRING,
+            allowNull: true
         },
         homeTown: {
             type: DataTypes.INTEGER,
@@ -13,6 +17,5 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.JSONB
         }
     });
-
     return UserProfile;
 };

@@ -14,7 +14,7 @@ module.exports = function(app, passport) {
      * @todo compare requested uid with uid encoded in JWT for match */
 
     router.get(
-        '/user/profile/fetch/:uid', [jwtAuth],
+        '/user/:uid/profile/fetch', [jwtAuth],
         function(req, res) {
             if (user = jwtAuth.isAuthenticated(req, res)) {
                 if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested */
@@ -42,7 +42,7 @@ module.exports = function(app, passport) {
     /**
      * @todo Need to verify email address and password after update */
     router.put(
-        '/user/profile/update/:uid', [jwtAuth],
+        '/user/:uid/profile/update/', [jwtAuth],
         function (req, res) {
             if (user = jwtAuth.isAuthenticated(req, res)) {
                 if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */
@@ -97,16 +97,42 @@ module.exports = function(app, passport) {
         }
     );
 
-    /** Endpoint for privacy
+    /** Endpoint for privacy */
     router.put(
+     '/user/:uid/profile/privacy', [jwtAuth],
+        function (req, res) {
+            if (user = jwtAuth.isAuthenticated(req, res)) {
+                if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */
+                    console.log(req.body);
+                    Profile.create({
+                        fullName: req.body.fullname,
+                        homeTown: req.body.hometown,
+                        userId: user.id
+                    }).then(function(profile) {
+                        res.status(200).json(profile);
+                    }).error(function(err) {
+                        res.status(400).json(err);
+                    });
+                } else {
+                    res.status(400).json({message:"User may only create their own profile"});
+                }
+            }
+        }
+    );
 
-    ); */
-
-     /** Endpoint for photo upload
+     /** Endpoint for photo upload **/
      router.put(
+       '/user/:uid/profile/photo', [jwtAuth],
+         function (req, res) {
+             if (user = jwtAuth.isAuthenticated(req, res)) {
+                 if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */
 
+                 } else {
+                     res.status(400).json({message:"User may update their own profile photo"});
+                 }
+             }
+         }
      );
-     */
 
     return router;
 };
