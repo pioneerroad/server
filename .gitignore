@@ -6,3 +6,4 @@ notes/
 config/config.json
 config/serverConfig.js
 data/states.sql
+temp/
