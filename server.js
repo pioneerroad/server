@@ -1,5 +1,4 @@
 "use strict"
-
 var express = require('express');
 var cors = require('cors');
 var app = express();
@@ -8,6 +7,7 @@ var passport = require('passport');
 var http = require('http');
 var https = require('https');
 var logger = require('morgan');
+var multer = require('multer');
 
 /**
  *  Load models
@@ -21,9 +21,11 @@ app.set('models', models);
 app.use(cors());
 app.use(passport.initialize());
 require (__dirname + '/controllers/passport') (app, passport);
-app.use(logger('dev')); // Logs calls to Express routes to terminal
+app.use(logger('dev')); // Logs calls by Express routes to terminal
 app.use(bodyParser.json()); // Use body-parser to extract data from POST
 app.use(bodyParser.urlencoded({ extended: false }));
+/** Multer defaults: upload files to /temp/uploads, max size = 10Mb per file, files are renamed to current datestamp **/
+app.use(multer({dest: './temp/uploads/', limits: {fileSize:10*1024*1024}, rename: function(fieldname, filename) {return Date.now();}}));
 
 /**
  * Initialise Routes

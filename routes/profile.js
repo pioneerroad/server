@@ -8,7 +8,7 @@ module.exports = function(app) {
     /**
      * Get a single user with UID
      * Note: should only be used for loading a user's own account; different methods required to load other user profiles.
-     * @todo compare requested uid with uid encoded in JWT for match */
+     */
 
     router.get(
         '/user/:uid/profile/fetch', [jwtAuth],
@@ -123,6 +123,16 @@ module.exports = function(app) {
              }
          }
      );
+
+    router.post(
+      '/upload', function(req, res) {
+            if(req.files.image !== undefined){
+                res.json({message:'FILE_UPLOAD_COMPLETE'}); // success
+            }else{
+                res.send("ERR_NO_FILE_CHOSEN");
+            }
+        }
+    );
 
     return router;
 };
