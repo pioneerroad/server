@@ -2,11 +2,9 @@ var jwtToken = require(__dirname + '/../controllers/jwtGenerate');
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
 var express = require('express');
 var router  = express.Router();
-var passport = require('passport');
 
-module.exports = function(app, passport) {
+module.exports = function(app) {
     var Profile = app.get('models').user_profile;
-    var Area = app.get('models').area;
 
     /**
      * Get a single user with UID
@@ -20,18 +18,11 @@ module.exports = function(app, passport) {
                 if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested */
                     Profile.find({where: {userId: req.params.uid}}).then(function (profile) {
                         if (profile) {
-                            Area.find({where: {id: profile.homeTown}}).then(function (area) {
-                                if (area) {
-                                    profile.homeTown = area;
-                                    res.json(profile);
-                                } else {
-                                    res.json({message: 'That town not found'});
-                                }
-                            });
-                        } else {
-                            res.json({message: "User not found"});
-                        }
-                    });
+                                res.status(200).json(profile);
+                            } else {
+                                res.json({message: "User not found"});
+                            }
+                        });
                 } else {
                     res.status(400).json({message:"User may only fetch their own profile"});
                 }
