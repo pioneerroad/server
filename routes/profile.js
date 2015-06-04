@@ -1,4 +1,3 @@
-var jwtToken = require(__dirname + '/../controllers/jwtGenerate');
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
 var express = require('express');
 var router  = express.Router();
