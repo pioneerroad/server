@@ -1,6 +1,19 @@
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
 var express = require('express');
 var router  = express.Router();
+var AWS = require('aws-sdk');
+var fs = require('fs');
+
+var accessKeyId =  process.env.AWS_ACCESS_KEY || "AKIAINM5LTI5MAGU5IVA";
+var secretAccessKey = process.env.AWS_SECRET_KEY || "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";
+
+AWS.config.update({
+    accessKeyId: 'AKIAJAXNN62SJ3RTTMFA',
+    secretAccessKey: '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',
+    region: 'ap-southeast-2'
+});
+
+var s3 = new AWS.S3();
 
 module.exports = function(app) {
     var Profile = app.get('models').user_profile;
@@ -127,7 +140,18 @@ module.exports = function(app) {
     router.post(
       '/upload', function(req, res) {
             if(req.files.image !== undefined){
-                res.json({message:'FILE_UPLOAD_COMPLETE'}); // success
+                res.json(req.files); // success
+                var params = {
+                    Bucket: 'images.pioneerroad.com.au',
+                    Key: 'profile-photos/jess/'+req.files.image.name,
+                    Body: fs.createReadStream(req.files.image.path),
+                    ContentType: req.files.image.mimetype,
+                    ACL: 'public-read'
+                };
+
+                s3.upload(params, function(err, data) {
+                    console.log(err, data);
+                });
             }else{
                 res.send("ERR_NO_FILE_CHOSEN");
             }
