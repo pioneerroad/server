@@ -1,22 +1,11 @@
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
 var express = require('express');
 var router  = express.Router();
-var AWS = require('aws-sdk');
 var fs = require('fs');
 
-var accessKeyId =  process.env.AWS_ACCESS_KEY || "AKIAINM5LTI5MAGU5IVA";
-var secretAccessKey = process.env.AWS_SECRET_KEY || "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";
-
-AWS.config.update({
-    accessKeyId: 'AKIAJAXNN62SJ3RTTMFA',
-    secretAccessKey: '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',
-    region: 'ap-southeast-2'
-});
-
-var s3 = new AWS.S3();
-
-module.exports = function(app) {
+module.exports = function(app, s3) {
     var Profile = app.get('models').user_profile;
+    var User = app.get('models').user;
 
     /**
      * Get a single user with UID
@@ -123,15 +112,45 @@ module.exports = function(app) {
         }
     );
 
-     /** Endpoint for photo upload **/
+     /** Endpoint for user profile photo upload **/
+     /** @Todo refactor as promises if possible */
+     /** @Todo Implement GN (GD/ImageMajik) Library */
      router.put(
        '/user/:uid/profile/photo', [jwtAuth],
          function (req, res) {
              if (user = jwtAuth.isAuthenticated(req, res)) {
                  if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */
+                     if(req.files.image !== undefined){
+                         res.json(req.files); // success
+                         User.find({
+                             where: {id:req.params.uid}
+                         }).success(function(user) {
+                             var params = { //Set parameters for S3 storage
+                                 Bucket: 'images.pioneerroad.com.au', // Bucket
+                                 Key: 'profile-photos/'+user.username+'/'+req.files.image.name, // S3 storage location
+                                 Body: fs.createReadStream(req.files.image.path), // Upload file (processed by Multer; read by fs)
+                                 ContentType: req.files.image.mimetype, // Mimetype reported by Multer
+                                 ACL: 'public-read' // Set S3 file permissions @todo perhaps this should be private and requests made by authorized S3 user?
+                             };
 
+                             s3.upload(params, function(err, data) {
+                                 if (err) { console.log(err); }
+                                 Profile.find({
+                                   where: {userId:req.params.uid}
+                                 }).success ( function (profile) {
+                                    profile.updateAttributes({
+                                        profilePhoto: data.Location
+                                    }).success(function () {
+                                        res.json({message:'Done'});
+                                    })
+                                 })
+                             })
+                             })
+                     } else {
+                         res.status(400).json({message:"ERR_NO_FILE_CHOSEN"});
+                     }
                  } else {
-                     res.status(400).json({message:"User may update their own profile photo"});
+                     res.status(400).json({message:"Profile photo can only be updated by its owner"});
                  }
              }
          }
@@ -139,7 +158,7 @@ module.exports = function(app) {
 
     router.post(
       '/upload', function(req, res) {
-            if(req.files.image !== undefined){
+            if(req.files.profilePhoto !== undefined){
                 res.json(req.files); // success
                 var params = {
                     Bucket: 'images.pioneerroad.com.au',
@@ -150,10 +169,18 @@ module.exports = function(app) {
                 };
 
                 s3.upload(params, function(err, data) {
-                    console.log(err, data);
+                    if (err) { console.log(err); }
+                    console.log(req.body);
+                    Profile.update(req.body,
+                        { where: {UserId:req.params.uid}, individualHooks: true, returning:true, limit:1}).then(function(numRows) {
+                            res.status(200).json(numRows);
+                        }).catch(function(err) {
+                            res.status(400).json(err);
+                        });
+                    console.log(data.Location);
                 });
             }else{
-                res.send("ERR_NO_FILE_CHOSEN");
+                res.status(400).json({message:"ERR_NO_FILE_CHOSEN"});
             }
         }
     );

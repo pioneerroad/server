@@ -8,6 +8,7 @@ var http = require('http');
 var https = require('https');
 var logger = require('morgan');
 var multer = require('multer');
+var AWS = require('aws-sdk'); AWS.config.update({region: 'ap-southeast-2'}); var s3 = new AWS.S3(); // Load AWS SDK and set default region
 
 /**
  *  Load models
@@ -33,7 +34,7 @@ app.use(multer({dest: './temp/uploads/', limits: {fileSize:10*1024*1024}, rename
 var routeRoot = '/api/v1';
 var indexRoutes = require('./routes/index');
 var userRoutes = require('./routes/user') (app, passport);
-var profileRoutes = require('./routes/profile') (app);
+var profileRoutes = require('./routes/profile') (app, s3);
 var vehicleRoutes = require('./routes/vehicle') (app);
 
 app.use(routeRoot, indexRoutes);

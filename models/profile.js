@@ -9,13 +9,11 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: true
         },
         homeTown: {
-            type: DataTypes.INTEGER,
-            references: 'areas',
-            referenceKey: 'id'
+            type: DataTypes.INTEGER
         },
         misc: {
             type: DataTypes.JSONB
-        }
+        },
     });
     return UserProfile;
 };
