@@ -5,7 +5,7 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: true
         },
         profilePhoto: {
-          type: DataTypes.STRING,
+          type: DataTypes.JSONB,
             allowNull: true
         },
         homeTown: {
