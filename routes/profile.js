@@ -116,14 +116,14 @@ module.exports = function(app, s3) {
      /** Endpoint for user profile photo upload **/
      /** @Todo refactor as promises if possible */
      /** @Todo Implement GM (GD/ImageMajik) Library */
-     router.put(
-       '/user/:uid/profile/photo', [jwtAuth],
+     router.put('/user/:uid/profile/photo', [jwtAuth],
          function (req, res) {
              if (user = jwtAuth.isAuthenticated(req, res)) {
                  if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */
-                     if(req.files.image !== undefined){ // Check if image sent in HTTP request
+                     if (req.files.image !== undefined) { // Check if image sent in HTTP request
                          var imageFile = req.files.image;
-                         imageFile.fileNameBase = imageFile.name.slice(0,imageFile.name.indexOf('.')); //Store the filename without extension
+                         imageFile.fileNameBase = imageFile.name.slice(0, imageFile.name.indexOf('.')); //Store the filename without extension
+                         var readStream = fs.createReadStream(imageFile.path); // Create file stream from path
 
                          var params = { //Set default parameters for S3 storage
                              Bucket: 'images.pioneerroad.com.au', // Bucket
@@ -131,33 +131,39 @@ module.exports = function(app, s3) {
                              ACL: 'public-read' // Set S3 file permissions
                          };
                          User.find({
-                             where: {id:req.params.uid} // Find user from ID passed in HTTP req
-                         }).success(function(user) { // If found....
-                             var readStream = fs.createReadStream(imageFile.path); // Create file stream from path
-                             /* Upload original image to S3 (no modifications) */
-                             params.Key = 'profile-photos/'+user.username+'/'+imageFile.name;
-                             params.Body = fs.createReadStream(imageFile.path);
-                             s3.upload(params, function(err, data) {
-                                 if (err) { console.log(err); }
-                                 Profile.find({
-                                     where: {userId:req.params.uid}
-                                 }).success ( function (profile) {
-                                     profile.updateAttributes({
-                                         profilePhoto: {
-                                             "baseFileName": imageFile.fileNameBase,
-                                             "originalURL": data.Location
-                                         }
-                                     }).success(function () {
-                                         res.json({message:'Done'});
-                                     })
+                             where: {id: req.params.uid} // Find user from ID passed in HTTP req
+                         }).then(
+                             function (user) {
+                                 /* Upload original image to S3 (no modifications) */
+                                 params.Key = 'profile-photos/' + user.username + '/' + imageFile.name;
+                                 params.Body = readStream;
+                                 s3.upload(params, function (err, data) {
+                                     if (err) console.log(err);
+                                     Profile.find({
+                                         where: {userId: req.params.uid}
+                                     }).then(
+                                         function (profile) {
+                                             profile.updateAttributes({
+                                                 profilePhoto: {
+                                                     "baseFileName": imageFile.fileNameBase,
+                                                     "originalURL": data.Location
+                                                 }
+                                             });
+                                             res.status(200).json(profile.profilePhoto);
+                                         },
+                                         function (error) {
+                                             console.log('ERROR: ' + error);
+                                         });
                                  });
-                             });
-                         });
+                             },
+                             function (error) {
+                                 console.log('ERROR: ' + error)
+                             })
                      } else {
-                         res.status(400).json({message:"ERR_NO_FILE_CHOSEN"});
+                         res.status(400).json({message: "ERR_NO_FILE_CHOSEN"});
                      }
                  } else {
-                     res.status(400).json({message:"Profile photo can only be updated by its owner"});
+                     res.status(400).json({message: "Profile photo can only be updated by its owner"});
                  }
              }
          }
@@ -193,15 +199,6 @@ module.exports = function(app, s3) {
                             console.log(data.Location);
                         });
                     });
-                /*var params = {
-                    Bucket: 'images.pioneerroad.com.au',
-                    Key: 'profile-photos/jess/'+req.files.image.name,
-                    Body: fs.createReadStream(req.files.image.path),
-                    ContentType: req.files.image.mimetype,
-                    ACL: 'public-read'
-                }; */
-
-
             }else{
                 res.status(400).json({message:"ERR_NO_FILE_CHOSEN"});
             }
