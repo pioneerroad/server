@@ -3,8 +3,6 @@ var express = require('express');
 var router  = express.Router();
 var fs = require('fs');
 var gm = require('gm').subClass({imageMagick:true});
-var Promise = require('bluebird');
-Promise.promisify(gm);
 
 module.exports = function(app, s3) {
     var Profile = app.get('models').user_profile;
@@ -116,56 +114,82 @@ module.exports = function(app, s3) {
     );
 
      /** Endpoint for user profile photo upload **/
-     /** @Todo refactor as promises if possible */
-     /** @Todo Implement GM (GD/ImageMajik) Library */
+
      router.put('/user/:uid/profile/photo', [jwtAuth],
          function (req, res) {
              if (user = jwtAuth.isAuthenticated(req, res)) {
                  if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */
-                     if (req.files.image !== undefined) { // Check if image sent in HTTP request
+                     var cropDimensions = {"width":req.body.width, "height":req.body.height, "x":req.body.x, "y":req.body.y};
+                     if(req.files.image !== undefined && cropDimensions.x !== undefined && cropDimensions.y !== undefined && cropDimensions.width !== undefined && cropDimensions.height !== undefined){ // Check if image and correct cropping parameters sent in HTTP request
                          var imageFile = req.files.image;
                          imageFile.fileNameBase = imageFile.name.slice(0, imageFile.name.indexOf('.')); //Store the filename without extension
-                         var readStream = fs.createReadStream(imageFile.path); // Create file stream from path
 
-                         var params = { //Set default parameters for S3 storage
-                             Bucket: 'images.pioneerroad.com.au', // Bucket
-                             ContentType: imageFile.mimetype, // Mimetype reported by Multer
-                             ACL: 'public-read' // Set S3 file permissions
+                         /* Default params for s3 storage*/
+                         var params = {
+                             Bucket: 'images.pioneerroad.com.au',
+                             ContentType: imageFile.mimetype,
+                             ACL: 'public-read'
                          };
+
                          User.find({
                              where: {id: req.params.uid} // Find user from ID passed in HTTP req
                          }).then(
                              function (user) {
-                                 /* Upload original image to S3 (no modifications) */
-                                 params.Key = 'profile-photos/' + user.username + '/' + imageFile.name;
-                                 params.Body = readStream;
-                                 s3.upload(params, function (err, data) {
-                                     if (err) console.log(err);
-                                     Profile.find({
-                                         where: {userId: req.params.uid}
-                                     }).then(
-                                         function (profile) {
-                                             profile.updateAttributes({
-                                                 profilePhoto: {
-                                                     "baseFileName": imageFile.fileNameBase,
-                                                     "originalURL": data.Location
-                                                 }
+                                 gm(imageFile.path).size(function(err, data) { // Get size of uploaded image
+                                     //if (err) { res.status(400).json(err) };
+                                     var imageSizes = {"original":[data.width,data.height],"large":[100,100],"medium":[50,50],"small":[30,30]}; // Sizes of processed images
+                                     var profileData = {};
+                                     for (var key in imageSizes) {
+                                         if (imageSizes.hasOwnProperty(key)) {
+                                             if (key != 'original') { // We won't process the original image, so just upload it
+                                                 profileData[key] = imageFile.fileNameBase+'_'+imageSizes[key][0]+'x'+imageSizes[key][1]+'.'+imageFile.extension;
+                                                 var readStream = fs.createReadStream(imageFile.path);
+                                                 (function(imageVersion) { // Encapsulated function to allow async function to take current iteration of image size as a variable
+                                                     var processedFilePath = 'temp/uploads/'+imageFile.fileNameBase+'_'+imageSizes[imageVersion][0]+'x'+imageSizes[imageVersion][0]+'.'+imageFile.extension; // Path where processed image will be stored before upload to S3
+                                                     gm(readStream, imageFile.name) // Read the original file and process it  (crop & resize)
+                                                         .crop(cropDimensions.width, cropDimensions.height, cropDimensions.x, cropDimensions.y)
+                                                         .resize(imageSizes[imageVersion][0])
+                                                         .write(processedFilePath, function(err, imageData) {
+                                                             //if (err) { res.status(400).json(err);}
+                                                             // Prepare unique values for upload to S3
+                                                             params.Key = 'profile-photos/'+user.username+'/'+imageFile.fileNameBase+'_'+imageSizes[imageVersion][0]+'x'+imageSizes[imageVersion][0]+'.'+imageFile.extension;
+                                                             params.Body = fs.createReadStream(processedFilePath);
+                                                             s3.upload(params, function(err, data) {
+                                                                 //if (err) { res.status(400).json(err) }
+                                                                 // Success
+                                                             });
+                                                         });
+                                                 })(key);
+
+                                             } else {
+                                                 profileData[key] = imageFile.fileNameBase+'.'+imageFile.extension;
+                                                 params.Key = 'profile-photos/'+user.username+'/'+imageFile.name;
+                                                 params.Body = fs.createReadStream(imageFile.path);
+                                                 s3.upload(params, function(err, data) {
+                                                     //if (err) { res.status(400).json(err) }
+                                                 });
+                                             }
+                                             Profile.find({
+                                                 where: {userId:req.params.uid}
+                                             }).success ( function (profile) {
+                                                 profile.updateAttributes({
+                                                     profilePhoto: profileData
+                                                 });
+                                                 res.status(200).json({message:"USER_PROFILE_UPDATE_COMPLETE","data":profile});
                                              });
-                                             res.status(200).json(profile.profilePhoto);
-                                         },
-                                         function (error) {
-                                             console.log('ERROR: ' + error);
-                                         });
+
+                                         }
+                                     }
                                  });
                              },
                              function (error) {
-                                 console.log('ERROR: ' + error)
-                             })
+                                 res.status(400).json({message:error})
+                             });
                      } else {
                          res.status(400).json({message: "ERR_NO_FILE_CHOSEN"});
                      }
                  } else {
-                     res.status(400).json({message: "Profile photo can only be updated by its owner"});
+                     res.status(400).json({message: "ERR_UNAUTHORISED_FOR_CURRENT_USER"});
                  }
              }
          }
