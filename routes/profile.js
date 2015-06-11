@@ -3,6 +3,8 @@ var express = require('express');
 var router  = express.Router();
 var fs = require('fs');
 var gm = require('gm').subClass({imageMagick:true});
+var Promise = require('bluebird');
+Promise.promisify(gm);
 
 module.exports = function(app, s3) {
     var Profile = app.get('models').user_profile;
@@ -90,7 +92,7 @@ module.exports = function(app, s3) {
         }
     );
 
-    /** Endpoint for privacy */
+    /** Endpoint for privacy settings */
     router.put(
      '/user/:uid/profile/privacy', [jwtAuth],
         function (req, res) {
@@ -171,36 +173,78 @@ module.exports = function(app, s3) {
 
     router.post(
       '/upload', function(req, res) {
+            var errors = {};
+            var imageFile = req.files.profilePhoto;
+            var cropDimensions = {"width":req.body.width, "height":req.body.height, "x":req.body.x, "y":req.body.y};
+
             if(req.files.profilePhoto !== undefined){
+                if (cropDimensions.x !== undefined && cropDimensions.y !== undefined && cropDimensions.width !== undefined && cropDimensions.height !== undefined) {
 
-                var imageFile = req.files.profilePhoto;
+                    /* Default params for s3 storage*/
+                    var params = {
+                        Bucket: 'images.pioneerroad.com.au',
+                        ContentType: imageFile.mimetype,
+                        ACL: 'public-read'
+                    };
 
-                /* Default params for s3 storage*/
-                var params = {
-                    Bucket: 'images.pioneerroad.com.au',
-                    ContentType: imageFile.mimetype,
-                    ACL: 'public-read'
-                };
-                imageFile.fileNameBase = imageFile.name.slice(0,imageFile.name.indexOf('.')); //Store the filename without extension
-                var readStream = fs.createReadStream(imageFile.path);
+                    imageFile.fileNameBase = imageFile.name.slice(0, imageFile.name.indexOf('.')); //Store the filename without extension
+                    gm(imageFile.path).size(function(err, data) {
+                        if (err) console.log(err);
+                        var imageSizes = {"original":[data.width,data.height],"large":[100,100],"medium":[50,50],"small":[30,30]};
+                        for (var key in imageSizes) {
+                            if (imageSizes.hasOwnProperty(key)) {
+                                if (key != 'original') {
+                                    var readStream = fs.createReadStream(imageFile.path);
+                                    (function(imageVersion) {
+                                        var processedFilePath = 'temp/uploads/'+imageFile.fileNameBase+'_'+imageSizes[imageVersion][0]+'x'+imageSizes[imageVersion][0]+'.'+imageFile.extension;
+                                        gm(readStream, imageFile.name)
+                                            .crop(cropDimensions.width, cropDimensions.height, cropDimensions.x, cropDimensions.y)
+                                            .resize(imageSizes[imageVersion][0])
+                                            .write(processedFilePath, function(err, imageData) {
+                                                params.Key = 'test-upload/'+imageFile.fileNameBase+'_'+imageSizes[imageVersion][0]+'x'+imageSizes[imageVersion][0]+'.'+imageFile.extension;
+                                                params.Body = fs.createReadStream(processedFilePath);
+                                                s3.upload(params, function(err, data) {
+                                                    if (err) { console.log(err); }
+                                                    console.log(data);
+                                                })
+                                            });
+                                    })(key);
+
+                                } else {
+                                    console.log(imageFile);
+                                    params.Key = 'test-upload/'+imageFile.name;
+                                    params.Body = fs.createReadStream(imageFile.path);
+                                    s3.upload(params, function(err, data) {
+                                        if (err) { console.log(err); }
+                                        //res.json(data.Location);
+                                    });
+                                }
+
+                            }
+                        }
+                    });
+                } else { // Cropping parameters missing or invalide
+                    errors.croppingParameters = "CROPPING_PARAMETERS_MISSING_OR_INVALID";
+                }
+
+                /*var readStream = fs.createReadStream(imageFile.path);
+                var tempPath = './temp/uploads/';
+                var tempFile = imageFile.fileNameBase+'_200x200.'+imageFile.extension;
                 gm(readStream, imageFile.name)
                     .resize(200,200)
                     .crop(100,100,50,50)
-                    .write('./temp/uploads/'+imageFile.fileNameBase+'_100x100.'+imageFile.extension, function (err) {
-                        params.Key = fs.createReadStream('./temp/uploads/'+imageFile.fileNameBase+'_100x100.'+imageFile.extension);
+                    .write(tempPath+tempFile, function (err, imageData) {
+                        console.log(tempFile);
+                        params.Key = 'test-upload/'+tempFile;
+                        params.Body = fs.createReadStream(tempPath+tempFile);
                         s3.upload(params, function(err, data) {
+                            console.log(data);
                             if (err) { console.log(err); }
-                            Profile.update(req.body,
-                                { where: {UserId:req.params.uid}, individualHooks: true, returning:true, limit:1}).then(function(numRows) {
-                                    res.status(200).json(numRows);
-                                }).catch(function(err) {
-                                    res.status(400).json(err);
-                                });
-                            console.log(data.Location);
+                            res.json(data.Location);
                         });
-                    });
-            }else{
-                res.status(400).json({message:"ERR_NO_FILE_CHOSEN"});
+                    });*/
+            } else { // No image attached or wrong file upload parameter used
+                errors.imageParameters = "IMAGE_MISSING_OR_INVALID";
             }
         }
     );
