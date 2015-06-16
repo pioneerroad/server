@@ -8,6 +8,10 @@ module.exports = function(sequelize, DataTypes) {
           type: DataTypes.JSONB,
             allowNull: true
         },
+        profileBackgroundPhoto: {
+            type: DataTypes.JSONB,
+            allowNull: true
+        },
         homeTown: {
             type: DataTypes.INTEGER
         },
