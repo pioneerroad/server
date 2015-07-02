@@ -129,6 +129,10 @@ module.exports = function(app, s3) {
                     var image = req.files.image; image.fileNameBase = image.name.slice(0, image.name.indexOf('.')); //Store the filename without extension
                     var cropDimensions = {"width":req.body.width, "height":req.body.height, "x":req.body.x, "y":req.body.y}; // Read cropping dimensions from post data
                     var processedImageSizes = {
+                        "xl": {
+                            "width": 500,
+                            "height": 500
+                        },
                         "large": {
                             "width": 100,
                             "height": 100
