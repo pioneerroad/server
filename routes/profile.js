@@ -231,15 +231,15 @@ module.exports = function(app, s3) {
                     var processedImageSizes = {
                         "large": {
                             "width": 1280,
-                            "height": 540
+                            "height": 474
                         },
                         "medium": {
                             "width": 540,
-                            "height": 227
+                            "height": 200
                         },
                         "small": {
                             "width": 230,
-                            "height": 97
+                            "height": 85
                         }
                     };
                     var fileStream = fs.createReadStream(image.path);
