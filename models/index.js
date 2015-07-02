@@ -28,23 +28,9 @@ Object.keys(db).forEach(function(modelName) {
 /* Set up associations */
 // Every user has a UserProfile
 db.user_profile.belongsTo(db.user);
-db.user.hasOne(db.user_profile, {onDelete: 'cascade', constraints:false});
+db.user.hasOne(db.user_profile);
 
-
-// A user profile belongs to a user; a user has one privacy profile
-db.privacy.belongsTo(db.user, {onDelete: 'cascase'});
-db.user.hasOne(db.privacy, {onDelete: 'cascade'});
-
-// A state can have many areas, but an area belongs to just one state
-//db.area.belongsTo(db.state);
-//db.state.hasMany(db.area, {constraints:false})
-
-// A user can have many vehicles, but a vehicle must belong to one user
-db.vehicle.belongsTo(db.user);
-db.user.hasMany(db.vehicle);
-
-// A vehicle can have one type
-db.rv_brand.hasMany(db.vehicle);
+db.privacy.belongsTo(db.user);
 
 db.sequelize = sequelize;
 

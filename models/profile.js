@@ -5,17 +5,19 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: true
         },
         profilePhoto: {
-          type: DataTypes.STRING,
+          type: DataTypes.JSONB,
+            allowNull: true
+        },
+        profileBackgroundPhoto: {
+            type: DataTypes.JSONB,
             allowNull: true
         },
         homeTown: {
-            type: DataTypes.INTEGER,
-            references: 'areas',
-            referenceKey: 'id'
+            type: DataTypes.INTEGER
         },
         misc: {
             type: DataTypes.JSONB
-        }
+        },
     });
     return UserProfile;
 };
