@@ -103,7 +103,6 @@ module.exports = function(app, s3) {
         function (req, res) {
             if (user = jwtAuth.isAuthenticated(req, res)) {
                 if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */
-                    console.log(req.body);
                     Profile.create({
                         fullName: req.body.fullname,
                         homeTown: req.body.hometown,
