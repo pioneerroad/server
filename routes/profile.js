@@ -8,7 +8,7 @@ var fs = Promise.promisifyAll(require('fs'));
 
 module.exports = function(app, s3) {
     var Profile = app.get('models').user_profile;
-    var User = app.get('models').user;
+    var User = app.get('models').user_account;
 
     /**
      * Get a single user with UID
@@ -20,9 +20,9 @@ module.exports = function(app, s3) {
         function (req, res) {
             if (user = jwtAuth.isAuthenticated(req, res)) {
                 if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested */
-                    Profile.find({where: {userId: req.params.uid}}).then(function (profile) {
-                        if (profile) {
-                            res.status(200).json(profile);
+                    Profile.find({where: {userAccountId: req.params.uid}}).then(function (data) {
+                        if (data) {
+                            res.status(200).json(data);
                         } else {
                             res.json({message: "User not found"});
                         }
@@ -35,23 +35,29 @@ module.exports = function(app, s3) {
     );
 
     /**
-     * @todo Need to verify email address and password after update */
+     * Update nickName field */
     router.put(
-        '/user/:uid/profile/update/', [jwtAuth],
+        '/user/:uid/profile/update/nickname', [jwtAuth],
         function (req, res) {
             if (user = jwtAuth.isAuthenticated(req, res)) {
                 if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */
-                    Profile.update(req.body,
-                        {
-                            where: {UserId: req.params.uid},
-                            individualHooks: true,
-                            returning: true,
-                            limit: 1
-                        }).then(function (numRows) {
-                            res.status(200).json(numRows);
-                        }).catch(function (err) {
-                            res.status(400).json(err);
-                        });
+                    if (!req.body.nickName) {
+                        res.status(400).json({message: "MISSING_DATA_NICKNAME"})
+                    } else {
+                        var nickName = {nickName: req.body.nickName};
+                        Profile.update(nickName,
+                            {
+                                fields: [user.nickName],
+                                where: {userAccountId: req.params.uid},
+                                individualHooks: true,
+                                returning: true,
+                                limit: 1
+                            }).then(function (numRows) {
+                                res.status(200).json(numRows);
+                            }).catch(function (err) {
+                                res.status(400).json(err);
+                            });
+                    }
                 } else {
                     res.status(400).json({message: "User may only update their own profile"});
                 }
@@ -59,68 +65,71 @@ module.exports = function(app, s3) {
         }
     );
 
-    /** Add profile data */
-    /** @todo ensure only one profile can be created per user ID */
-    router.post(
-        '/user/:uid/profile/create/', [jwtAuth],
+    /**
+     * Update homeTown field */
+    router.put(
+        '/user/:uid/profile/update/hometown', [jwtAuth],
         function (req, res) {
             if (user = jwtAuth.isAuthenticated(req, res)) {
                 if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */
-                    console.log(req.body);
-                    Profile.create({
-                        fullName: req.body.fullname,
-                        homeTown: req.body.hometown,
-                        userId: user.id
-                    }).then(function (profile) {
-                        res.status(200).json(profile);
-                    }).error(function (err) {
-                        res.status(400).json(err);
-                    });
+                    if (!req.body.homeTown) {
+                        res.status(400).json({message: "MISSING_DATA_HOMETOWN"})
+                    } else {
+                        var homeTown = {homeTown: req.body.homeTown};
+                        Profile.update(homeTown,
+                            {
+                                fields: [user.homeTown],
+                                where: {userAccountId: req.params.uid},
+                                individualHooks: true,
+                                returning: true,
+                                limit: 1
+                            }).then(function (numRows) {
+                                res.status(200).json(numRows);
+                            }).catch(function (err) {
+                                res.status(400).json(err);
+                            });
+                    }
                 } else {
-                    res.status(400).json({message: "User may only create their own profile"});
+                    res.status(400).json({message: "User may only update their own profile"});
                 }
             }
         }
     );
 
-    /** Endpoint for hometown selection (autosuggest on client) */
-    router.get(
-        '/town/select/:input', function (req, res) {
-            var test = app.get('models');
-            var testing = test.sequelize.query("SELECT * FROM towns WHERE label ILIKE '%" + req.params.input + "%'", {type: test.sequelize.QueryTypes.SELECT}).then(function (towns, err) {
-                if (towns) {
-                    res.status(200).json(towns);
-                } else {
-                    res.status(400).json(err);
-                }
-            });
-        }
-    );
-
-    /** Endpoint for privacy settings */
+    /**
+     * Update homeTown field */
     router.put(
-        '/user/:uid/profile/privacy', [jwtAuth],
+        '/user/:uid/profile/update/current-location', [jwtAuth],
         function (req, res) {
+            var dataStoreLocation = app.get('models').dataStore_location;
+
             if (user = jwtAuth.isAuthenticated(req, res)) {
                 if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */
-                    Profile.create({
-                        fullName: req.body.fullname,
-                        homeTown: req.body.hometown,
-                        userId: user.id
-                    }).then(function (profile) {
-                        res.status(200).json(profile);
-                    }).error(function (err) {
-                        res.status(400).json(err);
-                    });
+                    if (!req.body.lat || !req.body.lon) {
+                        res.status(400).json({message: "MISSING_OR_MALFORMED_DATA_LOCATION"})
+                    } else {
+                        var location = {checkinCoords: {lat: req.body.lat, lon: req.body.lon, updatedAt: Date.now()}};
+                        Profile.update(location,
+                            {
+                                where: {userAccountId: req.params.uid},
+                                individualHooks: true,
+                                returning: true,
+                                limit: 1
+                            }).then(function (data) {
+                                res.status(200).json(data);
+                            }).catch(function (err) {
+                                res.status(400).json(err);
+                            });
+                    }
                 } else {
-                    res.status(400).json({message: "User may only create their own profile"});
+                    res.status(400).json({message: "User may only update their own profile"});
                 }
             }
         }
     );
 
     /** Endpoint for user profile photo upload **/
-    router.put('/user/:uid/profile/photo', [jwtAuth],
+    router.put('/user/:uid/profile/update/photo', [jwtAuth],
         function (req, res) {
             if (user = jwtAuth.isAuthenticated(req, res)) {
                 if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */
@@ -196,7 +205,7 @@ module.exports = function(app, s3) {
                                         }
                                     }
                                     Profile.find({
-                                        where: {userId:uid}
+                                        where: {userAccountId:uid}
                                     }).success ( function (profile) {
                                         profile.updateAttributes({
                                             profilePhoto: profilePhotoData
@@ -220,7 +229,7 @@ module.exports = function(app, s3) {
     });
 
     /** Endpoint for user profile background photo upload **/
-    router.put('/user/:uid/profile/background-photo', [jwtAuth],
+    router.put('/user/:uid/profile/update/background-photo', [jwtAuth],
         function (req, res) {
             if (user = jwtAuth.isAuthenticated(req, res)) {
                 if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */
@@ -292,7 +301,7 @@ module.exports = function(app, s3) {
                                         }
                                     }
                                     Profile.find({
-                                        where: {userId:uid}
+                                        where: {userAccountId:uid}
                                     }).success ( function (profile) {
                                         profile.updateAttributes({
                                             profileBackgroundPhoto: profilePhotoData
@@ -315,5 +324,5 @@ module.exports = function(app, s3) {
             }
         });
 
-    return router;
-};
+        return router;
+    };

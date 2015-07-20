@@ -5,25 +5,16 @@ var router  = express.Router();
 var passport = require('passport');
 
 module.exports = function(app, passport) {
-    var User = app.get('models').user;
-    var Privacy = app.get('models').privacy;
+    var User = app.get('models').user_account;
+    var Privacy = app.get('models').user_privacy;
     var Profile = app.get('models').user_profile;
     router.post('/user/create', function(req, res) {
         User.create({
             username: req.body.username,
             password: req.body.password,
-            mail: req.body.mail,
-            cell: req.body.cell
+            mobile: req.body.mobile
         }).then(function(user) {
-            Privacy.create({ /* Create a default privacy profile too */
-                userId: user.id
-            }).then(function(privacy) {
-                Profile.create({
-                    userId: user.id
-                }).then(function(profile) {
-                    res.status(200).json(user);
-                })
-            });
+            res.status(200).json(user);
         }).error(function(err) {
             res.status(400).json(err);
         });
@@ -52,7 +43,7 @@ module.exports = function(app, passport) {
      * @todo compare requested uid with uid encoded in JWT for match */
 
     router.get(
-      '/user/account/fetch/:uid', [jwtAuth],
+      '/user/:uid/account/fetch', [jwtAuth],
         function(req, res) {
             if (user = jwtAuth.isAuthenticated(req, res)) {
                 if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested */
@@ -73,7 +64,7 @@ module.exports = function(app, passport) {
     /**
      * @todo Need to verify email address and password after update */
     router.put(
-        '/user/account/update/:uid', [jwtAuth],
+        '/user/:uid/account/update', [jwtAuth],
         function (req, res) {
             if (user = jwtAuth.isAuthenticated(req, res)) {
                 if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */

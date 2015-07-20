@@ -3,15 +3,19 @@
 var bcrypt = require('bcryptjs');
 
 module.exports = function(sequelize, DataTypes) {
-  var User = sequelize.define("user", {
+  var User = sequelize.define("user_account", {
     username: {
       type: DataTypes.STRING, allowNull: false, unique: true, validate:
-        { isAlphanumeric: true, stringLength: function(value) {
-          if (value.length > 12 ) {
-            throw new Error("Username too long");
-          }
-        }}
+        {
+          isEmail: true
+        },
+      comment: "Username is an email address"
       },
+    mailVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue:false,
+      comment: "Flag to indicate mail verification status"
+    },
     password: {
       type: DataTypes.STRING, allowNull: false, validate: {
         is : {args: /^.*(?=.{8,})(?=.*d)(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).*$/, msg: 'Password not strong enough'}
@@ -22,22 +26,12 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       defaultValue: 'user'
     },
-    mail: {
-      type: DataTypes.STRING, allowNull: false, unique: true, validate: {
-        isEmail: true
-      }
-    },
-    mailVerified: {
-      type: DataTypes.BOOLEAN,
-      defaultValue:false,
-      comment: "Flag to indicate mail verification status"
-    },
-    cell: {
+    mobile: {
       type: DataTypes.STRING, allowNull: false, validate: {
         isNumeric: true
       }
     },
-    cellVerified: {
+    mobileVerified: {
       type: DataTypes.BOOLEAN,
       defaultValue:false,
       comment: "Flag to indicate cell number verification status"
@@ -87,7 +81,7 @@ module.exports = function(sequelize, DataTypes) {
         });
       },
       afterCreate: function(user, fn) {
-        console.log(user);
+
       }
     }
   });

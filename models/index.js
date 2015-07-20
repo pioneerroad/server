@@ -26,11 +26,13 @@ Object.keys(db).forEach(function(modelName) {
 });
 
 /* Set up associations */
-// Every user has a UserProfile
-db.user_profile.belongsTo(db.user);
-db.user.hasOne(db.user_profile);
+// Every user has a user_profile
+db.user_profile.belongsTo(db.user_account);
+db.user_account.hasOne(db.user_profile);
 
-db.privacy.belongsTo(db.user);
+db.dataStore_location.belongsTo(db.user_account); // Each entry must belong to a valid userId
+
+db.user_privacy.belongsTo(db.user_account);
 
 db.sequelize = sequelize;
 

@@ -32,15 +32,12 @@ app.use(multer({dest: './temp/uploads/', limits: {fileSize:10*1024*1024}, rename
  * Initialise Routes
  * */
 var routeRoot = '/api/v1';
-var indexRoutes = require('./routes/index');
-var userRoutes = require('./routes/user') (app, passport);
-var profileRoutes = require('./routes/profile') (app, s3);
-var vehicleRoutes = require('./routes/vehicle') (app);
-
-app.use(routeRoot, indexRoutes);
-app.use(routeRoot, userRoutes);
-app.use(routeRoot, profileRoutes);
-app.use(routeRoot, vehicleRoutes);
+var indexRoutes = require('./routes/index'); app.use(routeRoot, indexRoutes);
+var userRoutes = require('./routes/user') (app, passport); app.use(routeRoot, userRoutes);
+var profileRoutes = require('./routes/profile') (app, s3); app.use(routeRoot, profileRoutes);
+var vehicleRoutes = require('./routes/vehicle') (app); app.use(routeRoot, vehicleRoutes);
+var utilityRoutes = require('./routes/utilities') (app); app.use(routeRoot, utilityRoutes);
+var privacyRoutes = require('./routes/privacy') (app); app.use(routeRoot, privacyRoutes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -62,10 +59,7 @@ var ports = serverConfig.ports;
  * */
 
 models.sequelize.sync().then(function () {
-    // Yucky, yucky things we have to put here... yearhk..
-    //models.sequelize.query('ALTER TABLE "areas" ADD COLUMN geog GEOGRAPHY(point, 4326)');
-    //models.sequelize.query('ALTER TABLE "places" ADD COLUMN the_geog GEOGRAPHY(point, 4326)');
-    //models.sequelize.query('ALTER TABLE "states" ADD COLUMN geog GEOGRAPHY(multipolygon, 4326)');
+    var modelSync = require(__dirname + '/migrations/sync_models') (models); // Apply non-sequelizeable elements to tables
 
     var server = app.listen(ports.noSSLPort, function() {
       var host = server.address().address;

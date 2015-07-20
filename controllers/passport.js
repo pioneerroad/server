@@ -2,11 +2,10 @@
 // Configure passport strategies for local and Facebook signup/login
 var BasicStrategy = require('passport-http').BasicStrategy;
 var FacebookTokenStrategy = require('passport-facebook-token').Strategy;
-var models = require(__dirname+'/../models');
 //var authConfig = require('../../instanceConfig/authConfig');
 
 module.exports = function(app, passport) {
-
+    var User = app.get('models').user_account;
     // ============================================
     // Basic Strategy
     // ============================================
@@ -14,7 +13,7 @@ module.exports = function(app, passport) {
     /* Basic Login */
     passport.use('basic-login', new BasicStrategy({},
         function(username, password, done) {
-            models.user.find({
+            User.find({
                 where: {username: username} }).then(function(user) {
                 if (!user) {
                     return done(null, {
