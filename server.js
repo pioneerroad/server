@@ -33,11 +33,15 @@ app.use(multer({dest: './temp/uploads/', limits: {fileSize:10*1024*1024}, rename
  * */
 var routeRoot = '/api/v1';
 var indexRoutes = require('./routes/index'); app.use(routeRoot, indexRoutes);
-var userRoutes = require('./routes/user') (app, passport); app.use(routeRoot, userRoutes);
-var profileRoutes = require('./routes/profile') (app, s3); app.use(routeRoot, profileRoutes);
-var vehicleRoutes = require('./routes/vehicle') (app); app.use(routeRoot, vehicleRoutes);
+var userRoutes = require('./routes/user_account') (app, passport); app.use(routeRoot, userRoutes);
+var profileRoutes = require('./routes/user_profile') (app, s3); app.use(routeRoot, profileRoutes);
+var privacyRoutes = require('./routes/user_privacy') (app); app.use(routeRoot, privacyRoutes);
+// var vehicleRoutes = require('./routes/vehicle') (app); app.use(routeRoot, vehicleRoutes);
+
+/** Management and utility routes*/
 var utilityRoutes = require('./routes/utilities') (app); app.use(routeRoot, utilityRoutes);
-var privacyRoutes = require('./routes/privacy') (app); app.use(routeRoot, privacyRoutes);
+var userManagementRoutes = require('./routes/user_account_management') (app); app.use(routeRoot, userManagementRoutes);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -59,7 +63,7 @@ var ports = serverConfig.ports;
  * */
 
 models.sequelize.sync().then(function () {
-    var modelSync = require(__dirname + '/migrations/sync_models') (models); // Apply non-sequelizeable elements to tables
+    //var modelSync = require(__dirname + '/migrations/sync_models') (models); // Apply non-sequelizeable elements to tables
 
     var server = app.listen(ports.noSSLPort, function() {
       var host = server.address().address;

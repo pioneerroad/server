@@ -27,7 +27,7 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: 'user'
     },
     mobile: {
-      type: DataTypes.STRING, allowNull: false, validate: {
+      type: DataTypes.STRING, unique: true, allowNull: false, validate: {
         isNumeric: true
       }
     },
