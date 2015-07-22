@@ -108,7 +108,13 @@ module.exports = function(app, s3) {
                     if (!req.body.lat || !req.body.lon) {
                         res.status(400).json({message: "MISSING_OR_MALFORMED_DATA_LOCATION"})
                     } else {
-                        var location = {checkinCoords: {lat: req.body.lat, lon: req.body.lon, updatedAt: Date.now()}};
+                        var coordsObj = {
+                            'lat': parseFloat(req.body.lat),
+                            'lon' : parseFloat(req.body.lon)
+                        };
+
+                        var location = {checkinCoords: {lat: coordsObj.lat, lon: coordsObj.lon, updatedAt: Date.now()}};
+
                         Profile.update(location,
                             {
                                 where: {userAccountId: req.params.uid},
