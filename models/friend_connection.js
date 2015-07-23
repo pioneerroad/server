@@ -1,7 +1,5 @@
 "use strict";
 
-var bcrypt = require('bcryptjs');
-
 module.exports = function(sequelize, DataTypes) {
   var Friend = sequelize.define("friend_connection", {
     id: {
