@@ -30,9 +30,15 @@ Object.keys(db).forEach(function(modelName) {
 db.user_profile.belongsTo(db.user_account);
 db.user_account.hasOne(db.user_profile);
 
+// Associate each entry in the dataStore_location with a valid user
 db.dataStore_location.belongsTo(db.user_account); // Each entry must belong to a valid userId
 
+// Associate each entry in the privacy table with a valid user
 db.user_privacy.belongsTo(db.user_account);
+
+// Associate each entry in friend table with valid users
+db.user_account.belongsToMany(db.user_account, {as: 'Friended', through: 'friend_connection', foreignKey: 'friended_id'});
+db.user_account.belongsToMany(db.user_account, {as: 'Friend', through: 'friend_connection', foreignKey:'friend_id'});
 
 db.sequelize = sequelize;
 
