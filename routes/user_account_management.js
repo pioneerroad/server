@@ -1,5 +1,5 @@
-var jwtToken = require(__dirname + '/../controllers/jwtGenerate');
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
+var matchUser = require(__dirname+'/../controllers/matchUser');
 var express = require('express');
 var router  = express.Router();
 
@@ -7,7 +7,7 @@ module.exports = function(app) {
     var User = app.get('models').user_account;
 
     router.get(
-        '/admin/user/account/list',
+        '/admin/:uid/user/account/list', [jwtAuth, matchUser],
         function(req, res) {
             User.findAll({attributes: ['id','username','mobile']})
                 .then(function(data) {

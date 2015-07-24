@@ -1,4 +1,5 @@
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
+var matchUser = require(__dirname+'/../controllers/matchUser');
 var express = require('express');
 var router  = express.Router();
 

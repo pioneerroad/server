@@ -1,5 +1,6 @@
 var jwtToken = require(__dirname + '/../controllers/jwtGenerate');
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
+var matchUser = require(__dirname+'/../controllers/matchUser');
 var express = require('express');
 var router  = express.Router();
 var passport = require('passport');
@@ -45,45 +46,32 @@ module.exports = function(app, passport) {
      * @todo compare requested uid with uid encoded in JWT for match */
 
     router.get(
-      '/user/:uid/account/fetch', [jwtAuth],
+      '/user/:uid/account/fetch', [jwtAuth, matchUser],
         function(req, res) {
-            if (user = jwtAuth.isAuthenticated(req, res)) {
-                if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested */
-                    User.find(req.params.uid).then(function (user) {
-                        if (user) {
-                            var response = {result:'FETCHED_USER_ACCOUNT', data: user};
-                            res.status(200).json(response);
-                        } else {
-                            res.json({message: "USER_NOT_FOUND"});
-                        }
-                    });
+            User.find(req.params.uid).then(function (user) {
+                if (user) {
+                    var response = {result:'FETCHED_USER_ACCOUNT', data: user};
+                    res.status(200).json(response);
                 } else {
-                    res.status(400).json({message:"NOT_AUTHORISED_FOR_THIS_USER"});
+                    res.json({message: "USER_NOT_FOUND"});
                 }
-            }
+            });
         }
     );
 
     /**
      * @todo Need to verify email address and password after update */
     router.put(
-        '/user/:uid/account/update', [jwtAuth],
+        '/user/:uid/account/update', [jwtAuth, matchUser],
         function (req, res) {
-            if (user = jwtAuth.isAuthenticated(req, res)) {
-                if (user.id == req.params.uid) { /* Check if requesting user (decoded from JWT) is same as requested profile */
-                    User.update(req.body,
-                        { where: {id:req.params.uid}, individualHooks: true, returning:true, limit:1}).then(function(user) {
-                            var response = {result:'UPDATE_USER_ACCOUNT_DATA', data: user};
-                            res.status(200).json(response);
-                        }).catch(function(err) {
-                            res.status(400).json(err);
-                        });
-                } else {
-                    res.status(400).json({message:"User may only update their own profile"});
-                }
-            }
-        }
-    );
+            User.update(req.body,
+                {where: {id: req.params.uid}, individualHooks: true, returning: true, limit: 1}).then(function (user) {
+                    var response = {result: 'UPDATE_USER_ACCOUNT_DATA', data: user};
+                    res.status(200).json(response);
+                }).catch(function (err) {
+                    res.status(400).json(err);
+                });
+        });
 
     return router;
 };
