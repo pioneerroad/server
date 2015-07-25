@@ -7,7 +7,7 @@ module.exports = function(app) {
     var User = app.get('models').user_account;
 
     router.get(
-        '/admin/:uid/user/account/list', [jwtAuth, matchUser],
+        '/admin/user/account/list',
         function(req, res) {
             User.findAll({attributes: ['id','username','mobile']})
                 .then(function(data) {
