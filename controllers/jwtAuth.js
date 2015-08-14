@@ -14,6 +14,8 @@ module.exports = function(req, res, done) {
     if (token) {
         try {
             var decoded = jwt.decode(token, app.get('jwtTokenSecret')); // Decode the token
+            console.log(decoded);
+            console.log(Date.now());
             if (decoded.exp <= Date.now()) { // Make sure it hasn't expired
                 res.status(400).json({message:'Access token has expired'});
             }

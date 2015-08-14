@@ -121,12 +121,12 @@ module.exports = function(app, s3) {
                     "height": 500
                 },
                 "large": {
-                    "width": 100,
-                    "height": 100
+                    "width": 200,
+                    "height": 200
                 },
                 "medium": {
-                    "width": 50,
-                    "height": 50
+                    "width": 100,
+                    "height": 100
                 },
                 "small": {
                     "width": 30,
@@ -210,15 +210,15 @@ module.exports = function(app, s3) {
             var processedImageSizes = {
                 "large": {
                     "width": 1280,
-                    "height": 474
+                    "height": 430
                 },
                 "medium": {
-                    "width": 540,
-                    "height": 200
+                    "width": 414,
+                    "height": 140
                 },
                 "small": {
-                    "width": 230,
-                    "height": 85
+                    "width": 320,
+                    "height": 107
                 }
             };
             var fileStream = fs.createReadStream(image.path);
