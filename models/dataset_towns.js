@@ -23,7 +23,7 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: true
         }
-        /* The rest of the these fields are not required now. Removing from model simplifies queries on this model, but can be added back in later if required. */
+
         /*latitude: {
             type: DataTypes.FLOAT,
             allowNull: false
