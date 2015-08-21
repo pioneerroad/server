@@ -16,6 +16,8 @@ module.exports = function(app) {
         }
     );
 
+    router
+
     return router;
 }
 

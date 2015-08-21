@@ -48,7 +48,7 @@ module.exports = function(app, passport) {
     router.get(
       '/user/:uid/account/fetch', [jwtAuth, matchUser],
         function(req, res) {
-            User.find(req.params.uid).then(function (user) {
+            User.findById(req.params.uid).then(function (user) {
                 if (user) {
                     var response = {result:'FETCHED_USER_ACCOUNT', data: user};
                     res.status(200).json(response);

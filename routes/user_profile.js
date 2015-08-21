@@ -10,6 +10,7 @@ var fs = Promise.promisifyAll(require('fs'));
 module.exports = function(app, s3) {
     var Profile = app.get('models').user_profile;
     var User = app.get('models').user_account;
+    var Towns = app.get('models').dataSet_towns;
 
     /**
      * Get a single user with UID
@@ -19,7 +20,7 @@ module.exports = function(app, s3) {
     router.get(
         '/user/:uid/profile/fetch', [jwtAuth, matchUser],
         function (req, res) {
-            Profile.find({where: {userAccountId: req.params.uid}}).then(function (data) {
+            Profile.find({where: {userAccountId: req.params.uid},include:[Towns]}).then(function (data) {
                 if (data) {
                     res.status(200).json(data);
                 } else {
@@ -58,13 +59,12 @@ module.exports = function(app, s3) {
     router.put(
         '/user/:uid/profile/update/hometown', [jwtAuth, matchUser],
         function (req, res) {
-            if (!req.body.homeTown) {
+            if (!req.body.homeTownId) {
                 res.status(400).json({message: "MISSING_DATA_HOMETOWN"})
             } else {
-                var homeTown = {homeTown: req.body.homeTown};
-                Profile.update(homeTown,
+                var homeTownId = {homeTownId: req.body.homeTownId};
+                Profile.update(homeTownId,
                     {
-                        fields: [user.homeTown],
                         where: {userAccountId: req.params.uid},
                         individualHooks: true,
                         returning: true,
@@ -78,8 +78,21 @@ module.exports = function(app, s3) {
         }
     );
 
+    router.get(
+        '/user/:uid/profile/hometown', [jwtAuth, matchUser],
+        function (req, res) {
+            Profile.find({where: {userAccountId: req.params.uid}}).then(function (data) {
+                if (data) {
+                    res.status(200).json(data);
+                } else {
+                    res.json({message: "User not found"});
+                }
+            });
+        }
+    )
+
     /**
-     * Update homeTown field */
+     * Update current location */
     router.put(
         '/user/:uid/profile/update/current-location', [jwtAuth, matchUser],
         function (req, res) {
@@ -183,9 +196,10 @@ module.exports = function(app, s3) {
                                     }) (key)
                                 }
                             }
-                            Profile.find({
+                            Profile.findOne({
                                 where: {userAccountId:uid}
-                            }).success ( function (profile) {
+                            }).then (function (profile) {
+                                console.log(profile);
                                 profile.updateAttributes({
                                     profilePhoto: profilePhotoData
                                 });

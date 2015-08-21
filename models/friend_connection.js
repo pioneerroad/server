@@ -17,6 +17,14 @@ module.exports = function(sequelize, DataTypes) {
     metaData: {
       type: DataTypes.JSONB,
       allowNull: true
+    },
+    friend_id: {
+      type: DataTypes.INTEGER,
+      unique: 'compositeIndex' // Composite index prevents multiple identical friend connections
+    },
+    friended_id: {
+      type: DataTypes.INTEGER,
+      unique: 'compositeIndex' // Composite index prevents multiple identical friend connections
     }
   });
 

@@ -40,6 +40,11 @@ db.user_privacy.belongsTo(db.user_account);
 db.user_account.belongsToMany(db.user_account, {as: 'Friended', through: 'friend_connection', foreignKey: 'friended_id'});
 db.user_account.belongsToMany(db.user_account, {as: 'Friend', through: 'friend_connection', foreignKey:'friend_id'});
 
+// Asssociate hometowns on the user profile with the dataStore_towns table
+db.user_profile.belongsTo(db.dataSet_towns, {foreignKey: 'homeTownId'});
+
 db.sequelize = sequelize;
+
+sequelize.sync();
 
 module.exports = db;

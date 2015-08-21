@@ -6,10 +6,10 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: true
         },
         /* Stores reference to users hometown */
-        homeTown: {
+        /*homeTown: {
             type: DataTypes.INTEGER,
             allowNull: true
-        },
+        },*/
         /* Stores user's most recent profile photo */
         /* Prototype: { */
         profilePhoto: {
@@ -27,15 +27,10 @@ module.exports = function(sequelize, DataTypes) {
         extendedProfile: {
             type: DataTypes.JSONB
         },
-        checkinDate: {
-            type: DataTypes.DATE,
-            allowNull: true
-        },
         checkinCoords: {
             type: DataTypes.JSONB,
             allowNull: true
         }
-        // checkinCoordinates added by manual sync //
     });
     return UserProfile;
 };
