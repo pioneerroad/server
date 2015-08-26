@@ -41,11 +41,10 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       defaultValue: 'preactive'
       }
-    },
-    {classMethods: {
+    }, {classMethods: {
       associate: function(models) {
         // associations can be defined here
-      },
+      }
     },
     instanceMethods: {
       verifyPassword: function(password, fn) {

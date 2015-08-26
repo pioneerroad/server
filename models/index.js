@@ -40,8 +40,14 @@ db.user_privacy.belongsTo(db.user_account);
 db.user_account.belongsToMany(db.user_account, {as: 'Friended', through: 'friend_connection', foreignKey: 'friended_id'});
 db.user_account.belongsToMany(db.user_account, {as: 'Friend', through: 'friend_connection', foreignKey:'friend_id'});
 
-// Asssociate hometowns on the user profile with the dataStore_towns table
+// Associate hometowns on the user profile with the dataStore_towns table
 db.user_profile.belongsTo(db.dataSet_towns, {foreignKey: 'homeTownId'});
+
+// Associate the cache_user_profile table with its user account/user profile
+db.cache_user_profile.belongsTo(db.user_account);
+
+// Associate the cache_friend_list table with it user account/user profile
+db.cache_friend_list.belongsTo(db.user_account);
 
 db.sequelize = sequelize;
 

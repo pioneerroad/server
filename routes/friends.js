@@ -2,6 +2,7 @@ var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
 var matchUser = require(__dirname+'/../controllers/matchUser');
 var express = require('express');
 var router  = express.Router();
+var friendController = require(__dirname+'/../controllers/friendController');
 
 module.exports = function(app) {
     var User = app.get('models').user_account;
@@ -14,19 +15,13 @@ module.exports = function(app) {
     router.post(
         '/user/:uid/friend-request/create', [jwtAuth, matchUser],
         function(req, res) {
-            if (req.body.friendReqId != req.params.uid) {
-                Friend.create({
-                    friended_id: req.body.friendReqId,
-                    friend_id: req.params.uid,
-                }).then(function(friendConnection) {
-                    var response = {result:'CREATED_NEW_FRIEND_REQUEST', data: friendConnection};
-                    res.status(200).json(response);
-                }).error(function(err) {
-                    res.status(400).json(err);
-                });
-            } else {
-                res.status(400).json({response:'CANNOT_BE_FRIENDS_WITH_YOURSELF'});
+            if (!req.body.friendReqId || !req.params.uid) {
+                res.status(400).json({error:'FRIEND_REQ_MALFORMED'});
             }
+            var friendAction = new friendController(req.params.uid, req.body.friendReqId).initiateFriendRequest().then(function(data) {
+                res.json(data);
+            });
+
         }
     );
 
@@ -36,18 +31,15 @@ module.exports = function(app) {
     // 3. Insert relationship metadata
     // 4. Trigger notification
     router.put(
-      '/user/:uid/friend-request/accept/:reqId', [jwtAuth, matchUser],
+      '/user/:uid/friend-request/accept', [jwtAuth, matchUser],
         function(req, res) {
-            Friend.update(
-                {status:'active'},
-                {where:[{id:req.params.reqId},{friended_id:req.params.uid}]}
-            ).then(function(friendConnection) {
-                    res.status(200).json({response:'UPDATE_SUCCESSFUL','numRows':friendConnection[0]});
-                }).error(function(err) {
-                    res.status(400).json(err);
-                });
-        }
-    );
+            if (!req.body.friendReqId || !req.params.uid) {
+                res.status(400).json({error:'MALFORMED_REQUEST'});
+            }
+            var friendAction = new friendController(req.params.uid, req.body.friendReqId).acceptFriendRequest().then(function(data) {
+                res.json(data);
+            });
+        });
 
     /** PUT: Change friendship status (block friend) */
     router.put(
@@ -55,7 +47,8 @@ module.exports = function(app) {
         function(req, res) {
                 Friend.update(
                     {status:'blocked'},
-                    {where:[{friend_id:req.params.uid},{friended_id:req.params.friendId}]}
+                    {where:[{friend_id:req.params.uid},{friended_id:req.params.friendId}]},
+                    {individualHooks: true}
                 ).then(function(friendConnection) {
                         if (friendConnection[0] != 1) {
                             res.status(400).json({message:'NO_RECORDS_UPDATED'});
@@ -74,7 +67,8 @@ module.exports = function(app) {
         function(req, res) {
             Friend.update(
                 {status:'active'},
-                {where:[{friend_id:req.params.uid},{friended_id:req.params.friendId}]}
+                {where:[{friend_id:req.params.uid},{friended_id:req.params.friendId}]},
+                {individualHooks: true}
             ).then(function(friendConnection) {
                     if (friendConnection[0] != 1) {
                         res.status(400).json({message:'NO_RECORDS_UPDATED'});
@@ -92,7 +86,7 @@ module.exports = function(app) {
         '/user/:uid/friends-nearby', [jwtAuth, matchUser],
         function(req, res) {
             var models = app.get('models');
-            var friendList = models.sequelize.query('SELECT "user_profiles"."userAccountId", "user_profiles"."nickName", "user_profiles"."checkinCoords"->\'updatedAt\' as checkinTime, "user_profiles"."profilePhoto", ST_Distance_Sphere((SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid), "user_profiles"."the_geom") / 1000 AS distance FROM "user_profiles" LEFT JOIN "friend_connections" ON "friend_connections"."friended_id" = "user_profiles"."userAccountId" WHERE "friend_connections"."friend_id" = :uid AND "friend_connections"."status" = \'active\' ORDER BY "distance"', {replacements: {uid:req.params.uid}, type: models.sequelize.QueryTypes.SELECT})
+            var friendList = models.sequelize.query('SELECT "user_profiles"."userAccountId", "user_profiles"."nickName", "user_profiles"."currentLocation"->\'updatedAt\' as checkinTime, "user_profiles"."profilePhoto", ST_Distance_Sphere((SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid), "user_profiles"."the_geom") / 1000 AS distance FROM "user_profiles" LEFT JOIN "friend_connections" ON "friend_connections"."friended_id" = "user_profiles"."userAccountId" WHERE "friend_connections"."friend_id" = :uid AND "friend_connections"."status" = \'active\' ORDER BY "distance"', {replacements: {uid:req.params.uid}, type: models.sequelize.QueryTypes.SELECT})
                 .then(function(friends) {
                     res.status(200).json(friends);
                 })

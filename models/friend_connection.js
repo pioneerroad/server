@@ -9,7 +9,7 @@ module.exports = function(sequelize, DataTypes) {
       autoIncrement: true
     },
     status: {
-      type: DataTypes.ENUM('request','ignore','active','blocked'),
+      type: DataTypes.ENUM('request', 'ignore', 'active', 'blocked'),
       allowNull: false,
       defaultValue: 'request'
     },
@@ -25,7 +25,13 @@ module.exports = function(sequelize, DataTypes) {
     friended_id: {
       type: DataTypes.INTEGER,
       unique: 'compositeIndex' // Composite index prevents multiple identical friend connections
-    }
+    }}, {
+      hooks: {
+        afterUpdate: function(data, options, fn) {
+
+          return fn();
+        },
+      }
   });
 
   return Friend;

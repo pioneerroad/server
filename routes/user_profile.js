@@ -105,7 +105,7 @@ module.exports = function(app, s3) {
                         'lon' : parseFloat(req.body.lon)
                     };
 
-                    var location = {checkinCoords: {lat: coordsObj.lat, lon: coordsObj.lon, updatedAt: Date.now()}};
+                    var location = {currentLocation: {lat: coordsObj.lat, lon: coordsObj.lon, updatedAt: Date.now()}};
 
                     Profile.update(location,
                         {
@@ -307,7 +307,7 @@ module.exports = function(app, s3) {
         router.get('/user/:uid/current-location', [jwtAuth, matchUser],
             function(req, res) {
                 var models = app.get('models');
-                var currentLocation = models.sequelize.query('SELECT towns."location", "user_profiles"."checkinCoords"->\'updatedAt\' AS timestamp, towns."tourism_region", towns."state", ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) / 1000 AS distance FROM "dataSet_towns" AS towns, "user_profiles" WHERE ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) < 100000 ORDER BY ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) LIMIT 1;', {replacements: {uid:req.params.uid}, type: models.sequelize.QueryTypes.SELECT})
+                var currentLocation = models.sequelize.query('SELECT towns."location", "user_profiles"."currentLocation"->\'updatedAt\' AS timestamp, towns."tourism_region", towns."state", ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) / 1000 AS distance FROM "dataSet_towns" AS towns, "user_profiles" WHERE ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) < 100000 ORDER BY ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) LIMIT 1;', {replacements: {uid:req.params.uid}, type: models.sequelize.QueryTypes.SELECT})
                     .then(function(currentLocation) {
                         res.status(200).json(currentLocation);
                     })
@@ -316,5 +316,12 @@ module.exports = function(app, s3) {
                     });
             });
 
+        router.get('/test', function(req, res) {
+            var test = require(__dirname+'/../controllers/friendController');
+            test.initiateFriendRequest(20, 8).then(function(data) {
+                res.json(data);
+            })
+        })
+
         return router;
-    };
+};
