@@ -1,92 +1,135 @@
 var models = require(__dirname+'/../models');
-var Friend = models.friend_connection;
+var Friend = models.relationship_friends;
+var Profile = models.user_profile;
+var User = models.user_account;
 
-module.exports = function(friendId, friendedId) {
+module.exports = function(friendA, friendB) {
 
-    this.friendId = friendId;
-    this.friendedId = friendedId;
-
-    this.initiateFriendRequest = function() {
-        if (friendId == friendedId) {
-            return {error:'CANNOT_BE_FRIENDS_WITH_YOURSELF'}
+    this.initiateFriendRequest = function(friendA, friendB, metaData) {
+        if (typeof(placeId) !== 'number') {
+            placeId = null;
         }
-        return Friend.findAll({where: {
-            $or : [{
-                $and: {
-                    friend_id: friendId,
-                    friended_id: friendedId}},
-                {
-                    $and: {
-                        friended_id: friendId,
-                        friend_id: friendedId
-                    }}]}
-        }).then(function(data) {
-            if (data.length == 0) {
-                return Friend.create({
-                    friend_id: friendId,
-                    friended_id: friendedId,
-                }).then(function(response) {
-                    return Friend.create({
-                        friended_id: friendId,
-                        friend_id: friendedId
-                    }).then(function(response) {
-                        return response;
-                    })
-                }).error(function(err) {
-                    return err;
-                });
-            } else {
-                return {error:'FRIENDSHIP_EXISTS'};
+
+        var orderedPair = createOrderedPair(friendA, friendB);
+        if (orderedPair) {
+            return Friend.create({
+                friendA: orderedPair[0],
+                friendB: orderedPair[1],
+                initiator: parseInt(friendA),
+                recipient: parseInt(friendB),
+                metaData: metaData
+            }).then(function(data) {
+                return data;
+            }).error(function(err) {
+                return err;
+            });
+        } else {
+            return {error:'INCORRECT_PARAMETERS'};
+        }
+    };
+
+    this.acceptFriendRequest = function(friendA, requestId) {
+        return Friend.update({
+            status: 'active',
+            lastStatusUpdateBy: friendA
+        }, {
+            where: {
+                id: requestId,
+                status: 'pending',
+                recipient: friendA
             }
+        }).then(function(data) {
+            return data;
+        }).error(function(err) {
+            return err;
+        });
+    };
+
+    this.ignoreFriendRequest = function(friendA, requestId) {
+        return Friend.update({
+            status: 'ignore',
+            lastStatusUpdateBy: friendA
+        }, {
+            where: {
+                id: requestId,
+                status: 'pending',
+                recipient: friendA
+            }
+        }).then(function(data) {
+            return data;
+        }).error(function(err) {
+            return err;
         });
     }
 
-    this.acceptFriendRequest = function() {
-        return Friend.update({status:'active'},{where: {
-            $or : [{
+    this.pendingFriendList = function(uid) {
+        return Friend.findAll({
+            where: {
                 $and: {
-                    friend_id: this.friendId,
-                    friended_id: this.friendedId,
-                    status: 'request'}},
-                {
-                    $and: {
-                        friended_id: this.friendId,
-                        friend_id: this.friendedId,
-                        status: 'request'
-                    }}]}
-        }).then(function(response) {
-            return {response: 'Updated '+response+' rows'};
+                    status: 'pending',
+                    $or: [
+                        {friendA: uid},
+                        {friendB: uid}
+                    ]}
+            },
+            include: [{
+                model: User,
+                where: { friendA: models.sequelize.col('user_account.id')}
+            }]
+        }).then(function(data) {
+            return data;
+        }).error(function(err) {
+            return err;
+        });
+    };
+
+    this.blockFriend = function(friendA, friendB) {
+        var orderedPair = createOrderedPair(friendA, friendB);
+
+        return Friend.update({
+            status: 'blocked',
+            lastStatusUpdateBy: friendA
+        }, {
+            where: {
+                friendA: orderedPair[0],
+                friendB: orderedPair[1]
+            }
+        }).then(function(data) {
+            return data;
+        }).error(function(err) {
+            return err;
         });
     }
 
-    this.updateFriendRequest = function() {
-        return {message:'Updated'};
+    this.unblockFriend = function(friendA, friendB) {
+        var orderedPair = createOrderedPair(friendA, friendB);
+
+        return Friend.update({
+            status: 'active',
+            lastStatusUpdateBy: friendA
+        }, {
+            where: {
+                friendA: orderedPair[0],
+                friendB: orderedPair[1],
+                status: 'blocked',
+                lastStatusUpdateBy: friendA // Only the person who created the block should be able to clear it
+            }
+        }).then(function(data) {
+            return data;
+        }).error(function(err) {
+            return err;
+        });
     }
+
+
+
 }
 
-
-
-
-/*module.exports = {
-    initiateFriendRequest: function(friendId) {
-
-    },
-    acceptFriendRequest: function(friendId, friendedId) {
-        return Friend.findAll({where: {
-            $or : [{
-                $and: {
-                    friend_id: friendId,
-                    friended_id: friendedId}},
-                {
-                    $and: {
-                        friended_id: friendId,
-                        friend_id: friendedId
-                    }}]}
-        }).then(function(response) {
-            return response;
-        })
-    },
-    updateFriendStatus: function(friendId, friendedId, newStatus) {
-
+function createOrderedPair(friendA, friendB) {
+    if (friendA == friendB) {
+        return false;
     }
-}*/
+    var unorderedPair = [friendA, friendB];
+    var orderedPair = unorderedPair.sort(function(a,b){return a - b;});
+    return orderedPair;
+}

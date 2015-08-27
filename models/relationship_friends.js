@@ -1,7 +1,7 @@
 "use strict";
 
 module.exports = function(sequelize, DataTypes) {
-  var Friend = sequelize.define("friend_connection", {
+  var Friend = sequelize.define("relationship_friends", {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -9,28 +9,43 @@ module.exports = function(sequelize, DataTypes) {
       autoIncrement: true
     },
     status: {
-      type: DataTypes.ENUM('request', 'ignore', 'active', 'blocked'),
+      type: DataTypes.ENUM('pending', 'ignore', 'active', 'blocked'),
       allowNull: false,
-      defaultValue: 'request'
+      defaultValue: 'pending'
     },
     // Prototype {location: INT}
     metaData: {
       type: DataTypes.JSONB,
       allowNull: true
     },
-    friend_id: {
+    /*friendA: {
       type: DataTypes.INTEGER,
       unique: 'compositeIndex' // Composite index prevents multiple identical friend connections
     },
-    friended_id: {
+    friendB: {
       type: DataTypes.INTEGER,
       unique: 'compositeIndex' // Composite index prevents multiple identical friend connections
+    },*/
+    initiator: {
+      type: DataTypes.INTEGER,
+      unique: false,
+      allowNull: false
+    },
+    recipient: {
+      type: DataTypes.INTEGER,
+      unique: false,
+      allowNull: false
+    },
+    lastStatusUpdateBy: {
+      type: DataTypes.INTEGER,
+      unique: false,
+      notNull: true
     }}, {
       hooks: {
         afterUpdate: function(data, options, fn) {
 
           return fn();
-        },
+        }
       }
   });
 

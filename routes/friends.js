@@ -3,6 +3,7 @@ var matchUser = require(__dirname+'/../controllers/matchUser');
 var express = require('express');
 var router  = express.Router();
 var friendController = require(__dirname+'/../controllers/friendController');
+var friendAction = new friendController();
 
 module.exports = function(app) {
     var User = app.get('models').user_account;
@@ -15,71 +16,80 @@ module.exports = function(app) {
     router.post(
         '/user/:uid/friend-request/create', [jwtAuth, matchUser],
         function(req, res) {
-            if (!req.body.friendReqId || !req.params.uid) {
+            if (!req.body.recipientId || !req.params.uid) {
                 res.status(400).json({error:'FRIEND_REQ_MALFORMED'});
             }
-            var friendAction = new friendController(req.params.uid, req.body.friendReqId).initiateFriendRequest().then(function(data) {
-                res.json(data);
+            if (!req.body.placeId) {
+                req.body.placeId = null;
+            }
+            friendAction.initiateFriendRequest(req.params.uid, req.body.recipientId, {place: req.body.placeId}).then(function(response) {
+                res.json(response);
             });
-
         }
     );
 
     /** PUT: Accept a friend request*/
-    // 1. Change status of friend request from request -> active
-    // 2. Add reciprocal request
     // 3. Insert relationship metadata
     // 4. Trigger notification
     router.put(
       '/user/:uid/friend-request/accept', [jwtAuth, matchUser],
         function(req, res) {
-            if (!req.body.friendReqId || !req.params.uid) {
+            if (!req.body.friendRelationshipId || !req.params.uid) {
                 res.status(400).json({error:'MALFORMED_REQUEST'});
             }
-            var friendAction = new friendController(req.params.uid, req.body.friendReqId).acceptFriendRequest().then(function(data) {
+            friendAction.acceptFriendRequest(req.params.uid, req.body.friendRelationshipId).then(function(data) {
+                res.json(data);
+            });
+        });
+
+    /** PUT: Ignore a friend request*/
+        // 3. Insert relationship metadata
+        // 4. Trigger notification
+    router.put(
+        '/user/:uid/friend-request/ignore', [jwtAuth, matchUser],
+        function(req, res) {
+            if (!req.body.friendRelationshipId || !req.params.uid) {
+                res.status(400).json({error:'MALFORMED_REQUEST'});
+            }
+            friendAction.ignoreFriendRequest(req.params.uid, req.body.friendRelationshipId).then(function(data) {
                 res.json(data);
             });
         });
 
     /** PUT: Change friendship status (block friend) */
     router.put(
-        '/user/:uid/friend-request/block/:friendId', [jwtAuth, matchUser],
+        '/user/:uid/friend-request/block', [jwtAuth, matchUser],
         function(req, res) {
-                Friend.update(
-                    {status:'blocked'},
-                    {where:[{friend_id:req.params.uid},{friended_id:req.params.friendId}]},
-                    {individualHooks: true}
-                ).then(function(friendConnection) {
-                        if (friendConnection[0] != 1) {
-                            res.status(400).json({message:'NO_RECORDS_UPDATED'});
-                        } else {
-                            res.status(200).json({response:'UPDATE_SUCCESSFUL'});
-                        }
-                    }).error(function(err) {
-                        res.status(400).json(err);
-                    });
+                if (!req.body.blockId) {
+                    res.status(400).json({error:'MALFORMED_REQUEST'})
+                }
+                friendAction.blockFriend(req.params.uid, req.body.blockId).then(function(data) {
+                    res.json(data);
+                });
         }
     );
 
     /** PUT: Change friendship status (unblock friend) */
     router.put(
-        '/user/:uid/friend-request/unblock/:friendId', [jwtAuth, matchUser],
+        '/user/:uid/friend-request/unblock', [jwtAuth, matchUser],
         function(req, res) {
-            Friend.update(
-                {status:'active'},
-                {where:[{friend_id:req.params.uid},{friended_id:req.params.friendId}]},
-                {individualHooks: true}
-            ).then(function(friendConnection) {
-                    if (friendConnection[0] != 1) {
-                        res.status(400).json({message:'NO_RECORDS_UPDATED'});
-                    } else {
-                        res.status(200).json({response:'UPDATE_SUCCESSFUL'});
-                    }
-                }).error(function(err) {
-                    res.status(400).json(err);
-                });
+            if (!req.body.unblockId) {
+                res.status(400).json({error:'MALFORMED_REQUEST'})
+            }
+            friendAction.unblockFriend(req.params.uid, req.body.unblockId).then(function(data) {
+                res.json(data);
+            });
         }
     );
+
+    router.get(
+        '/user/:uid/friend-request/pending-list', [jwtAuth, matchUser],
+        function (req, res) {
+            friendAction.pendingFriendList(req.params.uid).then(function(data) {
+                res.json(data);
+            })
+        }
+    )
 
     /** Get list of nearby friends */
     router.get(
