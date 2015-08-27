@@ -71,11 +71,7 @@ module.exports = function(friendA, friendB) {
                         {friendA: uid},
                         {friendB: uid}
                     ]}
-            },
-            include: [{
-                model: User,
-                where: { friendA: models.sequelize.col('user_account.id')}
-            }]
+            }
         }).then(function(data) {
             return data;
         }).error(function(err) {

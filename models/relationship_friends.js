@@ -18,14 +18,14 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.JSONB,
       allowNull: true
     },
-    /*friendA: {
+    friendA: {
       type: DataTypes.INTEGER,
       unique: 'compositeIndex' // Composite index prevents multiple identical friend connections
     },
     friendB: {
       type: DataTypes.INTEGER,
       unique: 'compositeIndex' // Composite index prevents multiple identical friend connections
-    },*/
+    },
     initiator: {
       type: DataTypes.INTEGER,
       unique: false,
