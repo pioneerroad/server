@@ -106,5 +106,17 @@ module.exports = function(app) {
         }
     );
 
+    /** Find a friend by username/email ID or phone number **/
+    router.post(
+        '/user/:uid/friend/find', [jwtAuth], function(req, res) {
+            if (!req.body.username) {
+                res.status(400).json({error:'MALFORMED_REQUEST'});
+            }
+            friendAction.findFriend(req.body.username).then(function(data) {
+                res.json(data);
+            })
+        });
+
     return router;
+
 };

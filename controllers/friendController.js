@@ -121,7 +121,21 @@ module.exports = function(friendA, friendB) {
         });
     }
 
-
+    this.findFriend = function(username) {
+        return User.findOne({
+            where: {
+                username : username
+            }, attributes: ['id']}
+        ).then(function(data) {
+            if (data) {
+                return data;
+            } else {
+                return {error: 'NO_MATCHING_USER'}
+            }
+        }).error(function(err) {
+            return err;
+        })
+    }
 
 }
 
