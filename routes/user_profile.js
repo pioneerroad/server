@@ -1,5 +1,5 @@
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
-var matchUser = require(__dirname+'/../controllers/matchUser');
+var verifyOwnUserAccount = require(__dirname+'/../controllers/verifyOwnUserAccount');
 var express = require('express');
 var router  = express.Router();
 var Promise = require('bluebird');
@@ -18,7 +18,7 @@ module.exports = function(app, s3) {
      */
 
     router.get(
-        '/user/:uid/profile/fetch', [jwtAuth, matchUser],
+        '/user/:uid/profile/fetch', [jwtAuth, verifyOwnUserAccount],
         function (req, res) {
             Profile.find({where: {userAccountId: req.params.uid},include:[Towns]}).then(function (data) {
                 if (data) {
@@ -33,7 +33,7 @@ module.exports = function(app, s3) {
     /**
      * Update nickName field */
     router.put(
-        '/user/:uid/profile/update/nickname', [jwtAuth, matchUser],
+        '/user/:uid/profile/update/nickname', [jwtAuth, verifyOwnUserAccount],
         function (req, res) {
             if (!req.body.nickName) {
                 res.status(400).json({message: "MISSING_DATA_NICKNAME"})
@@ -48,6 +48,7 @@ module.exports = function(app, s3) {
                     }).then(function (numRows) {
                         res.status(200).json(numRows);
                     }).catch(function (err) {
+                        console.log(err);
                         res.status(400).json(err);
                     });
             }
@@ -57,7 +58,7 @@ module.exports = function(app, s3) {
     /**
      * Update homeTown field */
     router.put(
-        '/user/:uid/profile/update/hometown', [jwtAuth, matchUser],
+        '/user/:uid/profile/update/hometown', [jwtAuth, verifyOwnUserAccount],
         function (req, res) {
             if (!req.body.homeTownId) {
                 res.status(400).json({message: "MISSING_DATA_HOMETOWN"})
@@ -79,7 +80,7 @@ module.exports = function(app, s3) {
     );
 
     router.get(
-        '/user/:uid/profile/hometown', [jwtAuth, matchUser],
+        '/user/:uid/profile/hometown', [jwtAuth, verifyOwnUserAccount],
         function (req, res) {
             Profile.find({where: {userAccountId: req.params.uid}}).then(function (data) {
                 if (data) {
@@ -94,7 +95,7 @@ module.exports = function(app, s3) {
     /**
      * Update current location */
     router.put(
-        '/user/:uid/profile/update/current-location', [jwtAuth, matchUser],
+        '/user/:uid/profile/update/current-location', [jwtAuth, verifyOwnUserAccount],
         function (req, res) {
             var dataStoreLocation = app.get('models').dataStore_location;
                 if (!req.body.lat || !req.body.lon) {
@@ -123,7 +124,7 @@ module.exports = function(app, s3) {
     );
 
     /** Endpoint for user profile photo upload **/
-    router.put('/user/:uid/profile/update/photo', [jwtAuth, matchUser],
+    router.put('/user/:uid/profile/update/photo', [jwtAuth, verifyOwnUserAccount],
         function (req, res) {
             var uid = req.params.uid;
             var image = req.files.image; image.fileNameBase = image.name.slice(0, image.name.indexOf('.')); //Store the filename without extension
@@ -216,7 +217,7 @@ module.exports = function(app, s3) {
     });
 
     /** Endpoint for user profile background photo upload **/
-    router.put('/user/:uid/profile/update/background-photo', [jwtAuth, matchUser],
+    router.put('/user/:uid/profile/update/background-photo', [jwtAuth, verifyOwnUserAccount],
         function (req, res) {
             var uid = req.params.uid;
             var image = req.files.image; image.fileNameBase = image.name.slice(0, image.name.indexOf('.')); //Store the filename without extension
@@ -287,7 +288,7 @@ module.exports = function(app, s3) {
                             }
                             Profile.find({
                                 where: {userAccountId:uid}
-                            }).success ( function (profile) {
+                            }).then ( function (profile) {
                                 profile.updateAttributes({
                                     profileBackgroundPhoto: profilePhotoData
                                 });
@@ -304,10 +305,10 @@ module.exports = function(app, s3) {
         });
 
         /** Get the nearest town to the current user */
-        router.get('/user/:uid/current-location', [jwtAuth, matchUser],
+        router.get('/user/:uid/current-location', [jwtAuth, verifyOwnUserAccount],
             function(req, res) {
                 var models = app.get('models');
-                var currentLocation = models.sequelize.query('SELECT towns."location", "user_profiles"."currentLocation"->\'updatedAt\' AS timestamp, towns."tourism_region", towns."state", ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) / 1000 AS distance FROM "dataSet_towns" AS towns, "user_profiles" WHERE ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) < 100000 ORDER BY ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) LIMIT 1;', {replacements: {uid:req.params.uid}, type: models.sequelize.QueryTypes.SELECT})
+                var currentLocation = models.sequelize.query('SELECT towns."location", "user_profiles"."currentLocation"->\'updatedAt\' AS timestamp, towns."tourism_region", towns."state", ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) / 1000 AS distance FROM "dataSet_towns" AS towns, "user_profiles" WHERE ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) < 100000 ORDER BY ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) LIMIT 1;', e)
                     .then(function(currentLocation) {
                         res.status(200).json(currentLocation);
                     })

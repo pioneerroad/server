@@ -37,8 +37,10 @@ db.dataStore_location.belongsTo(db.user_account); // Each entry must belong to a
 db.user_privacy.belongsTo(db.user_account);
 
 // Associate each entry in friend table with valid users
-db.user_account.belongsToMany(db.relationship_friends, {through: 'relationship_friends', foreignKey: 'friendA'});
-db.user_account.belongsToMany(db.relationship_friends, {through: 'relationship_friends', foreignKey:'friendB'});
+db.user_account.hasMany(db.relationship_friends, {foreignKey:'userA'});
+db.user_account.hasMany(db.relationship_friends, {foreignKey:'userB'});
+/*db.relationship_friends.belongsTo(db.user_account, {foreignKey:'userA'});
+db.relationship_friends.belongsTo(db.user_account, {foreignKey:'userB'});*/
 
 // Associate hometowns on the user profile with the dataStore_towns table
 db.user_profile.belongsTo(db.dataSet_towns, {foreignKey: 'homeTownId'});

@@ -1,5 +1,10 @@
 module.exports = function(sequelize, DataTypes) {
     var Privacy = sequelize.define("user_privacy", {
+        userAccountId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            primaryKey: true
+        },
         incognitoMode: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
@@ -8,17 +13,17 @@ module.exports = function(sequelize, DataTypes) {
         nickName: {
             type: DataTypes.ENUM('public','friends','private'),
             allowNull: false,
-            defaultValue: 'friends'
+            defaultValue: 'public'
         },
         currentLocation: {
             type: DataTypes.ENUM('public','friends','private'),
             allowNull: false,
-            defaultValue: 'friends'
+            defaultValue: 'public'
         },
         homeTownId: {
             type: DataTypes.ENUM('public','friends','private'),
             allowNull: false,
-            defaultValue: 'friends'
+            defaultValue: 'public'
         },
         profilePhoto: {
             type: DataTypes.ENUM('public','friends','private'),
@@ -33,12 +38,12 @@ module.exports = function(sequelize, DataTypes) {
         vehicleProfile: {
             type: DataTypes.ENUM('public','friends','private'),
             allowNull: false,
-            defaultValue: 'friends'
+            defaultValue: 'public'
         },
         extendedProfile: {
             type: DataTypes.ENUM('public','friends','private'),
             allowNull: false,
-            defaultValue: 'friends'
+            defaultValue: 'public'
         }
     }, {
         freezeTableName: true,

@@ -2,12 +2,11 @@
 
 module.exports = function(sequelize, DataTypes) {
     var cacheUserProfile = sequelize.define("cache_user_profile", {
-        /*id: {
+        userAccountId: {
             type: DataTypes.INTEGER,
             primaryKey: true,
-            unique: true,
-            autoIncrement: true
-        },*/
+            unique: true
+        },
         public_profile: {
             type: DataTypes.JSONB,
             allowNull: true
@@ -19,10 +18,6 @@ module.exports = function(sequelize, DataTypes) {
         private_profile: {
             type: DataTypes.JSONB,
             allowNull: true
-        },
-        userAccountId: {
-            unique:true,
-            type: DataTypes.INTEGER
         }
     });
 

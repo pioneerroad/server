@@ -2,19 +2,15 @@ var models = require(__dirname+'/../models');
 var Friend = models.relationship_friends;
 var Profile = models.user_profile;
 var User = models.user_account;
+var rawSQL = require(__dirname+'/rawQueries');
 
 module.exports = function(friendA, friendB) {
 
-    this.initiateFriendRequest = function(friendA, friendB, metaData) {
-        if (typeof(placeId) !== 'number') {
-            placeId = null;
-        }
-
-        var orderedPair = createOrderedPair(friendA, friendB);
-        if (orderedPair) {
+    this.createFriendRequest = function(friendA, friendB, metaData) {
+        if (friendA != friendB) {
             return Friend.create({
-                friendA: orderedPair[0],
-                friendB: orderedPair[1],
+                friendA: parseInt(friendA),
+                friendB: parseInt(friendB),
                 initiator: parseInt(friendA),
                 recipient: parseInt(friendB),
                 metaData: metaData
@@ -63,34 +59,29 @@ module.exports = function(friendA, friendB) {
     }
 
     this.pendingFriendList = function(uid) {
-        return Friend.findAll({
-            where: {
-                $and: {
-                    status: 'pending',
-                    $or: [
-                        {friendA: uid},
-                        {friendB: uid}
-                    ]}
-            }
-        }).then(function(data) {
-            return data;
-        }).error(function(err) {
-            return err;
-        });
+        return models.sequelize.query(rawSQL.pendingFriendRequests, {replacements: {uid: uid}, raw:true})
+            .spread(function(results, metadata) {
+                return results;
+            })
+            .error(function(err) {
+                return err;
+            });
     };
 
     this.blockFriend = function(friendA, friendB) {
-        var orderedPair = createOrderedPair(friendA, friendB);
-
+        console.log(friendA);
+        console.log(friendB);
         return Friend.update({
             status: 'blocked',
             lastStatusUpdateBy: friendA
         }, {
             where: {
-                friendA: orderedPair[0],
-                friendB: orderedPair[1]
+                $or: [
+                    {$and: {userA: friendA, userB: friendB}},
+                    {$and: {userA: friendB, userB: friendA}}
+                ]
             }
-        }).then(function(data) {
+        }).spread(function(data, metadata) {
             return data;
         }).error(function(err) {
             return err;
@@ -98,19 +89,18 @@ module.exports = function(friendA, friendB) {
     }
 
     this.unblockFriend = function(friendA, friendB) {
-        var orderedPair = createOrderedPair(friendA, friendB);
-
         return Friend.update({
             status: 'active',
             lastStatusUpdateBy: friendA
         }, {
             where: {
-                friendA: orderedPair[0],
-                friendB: orderedPair[1],
-                status: 'blocked',
-                lastStatusUpdateBy: friendA // Only the person who created the block should be able to clear it
+                $and: {status: 'blocked'},
+                $or: [
+                    {$and: {lastStatusUpdateBy: friendA, userB: friendA}},
+                    {$and: {lastStatusUpdateBy: friendA, userB: friendB}}
+                ]
             }
-        }).then(function(data) {
+        }).spread(function(data, metadata) {
             return data;
         }).error(function(err) {
             return err;
@@ -133,13 +123,14 @@ module.exports = function(friendA, friendB) {
         })
     }
 
-}
-
-function createOrderedPair(friendA, friendB) {
-    if (friendA == friendB) {
-        return false;
+    this.listActiveFriends = function(uid) {
+        return models.sequelize.query(rawSQL.activeFriends, {replacements: {uid: uid}})
+            .spread(function(results, metadata) {
+                return results;
+            })
+            .error(function(err) {
+                return err;
+            });
     }
-    var unorderedPair = [friendA, friendB];
-    var orderedPair = unorderedPair.sort(function(a,b){return a - b;});
-    return orderedPair;
+
 }

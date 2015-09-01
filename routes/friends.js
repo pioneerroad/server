@@ -1,9 +1,10 @@
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
-var matchUser = require(__dirname+'/../controllers/matchUser');
+var verifyOwnUserAccount = require(__dirname+'/../controllers/verifyOwnUserAccount');
 var express = require('express');
 var router  = express.Router();
 var friendController = require(__dirname+'/../controllers/friendController');
 var friendAction = new friendController();
+var rawSQL = require(__dirname+'/../controllers/rawQueries');
 
 module.exports = function(app) {
     var User = app.get('models').user_account;
@@ -14,7 +15,7 @@ module.exports = function(app) {
     // 2. If not, insert request
     // 3. Trigger notification
     router.post(
-        '/user/:uid/friend-request/create', [jwtAuth, matchUser],
+        '/user/:uid/friends/create', [jwtAuth, verifyOwnUserAccount],
         function(req, res) {
             if (!req.body.recipientId || !req.params.uid) {
                 res.status(400).json({error:'FRIEND_REQ_MALFORMED'});
@@ -22,7 +23,7 @@ module.exports = function(app) {
             if (!req.body.placeId) {
                 req.body.placeId = null;
             }
-            friendAction.initiateFriendRequest(req.params.uid, req.body.recipientId, {place: req.body.placeId}).then(function(response) {
+            friendAction.createFriendRequest(req.params.uid, req.body.recipientId, {place: req.body.placeId}).then(function(response) {
                 res.json(response);
             });
         }
@@ -32,7 +33,7 @@ module.exports = function(app) {
     // 3. Insert relationship metadata
     // 4. Trigger notification
     router.put(
-      '/user/:uid/friend-request/accept', [jwtAuth, matchUser],
+      '/user/:uid/friends/accept', [jwtAuth, verifyOwnUserAccount],
         function(req, res) {
             if (!req.body.friendRelationshipId || !req.params.uid) {
                 res.status(400).json({error:'MALFORMED_REQUEST'});
@@ -46,7 +47,7 @@ module.exports = function(app) {
         // 3. Insert relationship metadata
         // 4. Trigger notification
     router.put(
-        '/user/:uid/friend-request/ignore', [jwtAuth, matchUser],
+        '/user/:uid/friends/ignore', [jwtAuth, verifyOwnUserAccount],
         function(req, res) {
             if (!req.body.friendRelationshipId || !req.params.uid) {
                 res.status(400).json({error:'MALFORMED_REQUEST'});
@@ -58,7 +59,7 @@ module.exports = function(app) {
 
     /** PUT: Change friendship status (block friend) */
     router.put(
-        '/user/:uid/friend-request/block', [jwtAuth, matchUser],
+        '/user/:uid/friends/block', [jwtAuth, verifyOwnUserAccount],
         function(req, res) {
                 if (!req.body.blockId) {
                     res.status(400).json({error:'MALFORMED_REQUEST'})
@@ -71,7 +72,7 @@ module.exports = function(app) {
 
     /** PUT: Change friendship status (unblock friend) */
     router.put(
-        '/user/:uid/friend-request/unblock', [jwtAuth, matchUser],
+        '/user/:uid/friends/unblock', [jwtAuth, verifyOwnUserAccount],
         function(req, res) {
             if (!req.body.unblockId) {
                 res.status(400).json({error:'MALFORMED_REQUEST'})
@@ -83,20 +84,30 @@ module.exports = function(app) {
     );
 
     router.get(
-        '/user/:uid/friend-request/pending-list', [jwtAuth, matchUser],
+        '/user/:uid/friends/pending', [jwtAuth, verifyOwnUserAccount],
         function (req, res) {
             friendAction.pendingFriendList(req.params.uid).then(function(data) {
                 res.json(data);
             })
         }
-    )
+    );
+
+    router.get(
+        '/user/:uid/friends/active-list', [jwtAuth, verifyOwnUserAccount],
+        function (req, res) {
+            friendAction.listActiveFriends(req.params.uid).then(function(data) {
+                res.json(data);
+            });
+        }
+    );
+
 
     /** Get list of nearby friends */
     router.get(
-        '/user/:uid/friends-nearby', [jwtAuth, matchUser],
+        '/user/:uid/friends/nearby', [jwtAuth, verifyOwnUserAccount],
         function(req, res) {
             var models = app.get('models');
-            var friendList = models.sequelize.query('SELECT "user_profiles"."userAccountId", "user_profiles"."nickName", "user_profiles"."currentLocation"->\'updatedAt\' as checkinTime, "user_profiles"."profilePhoto", ST_Distance_Sphere((SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid), "user_profiles"."the_geom") / 1000 AS distance FROM "user_profiles" LEFT JOIN "friend_connections" ON "friend_connections"."friended_id" = "user_profiles"."userAccountId" WHERE "friend_connections"."friend_id" = :uid AND "friend_connections"."status" = \'active\' ORDER BY "distance"', {replacements: {uid:req.params.uid}, type: models.sequelize.QueryTypes.SELECT})
+            var friendList = models.sequelize.query(rawSQL.friendsNearby, {replacements: {uid:req.params.uid}, type: models.sequelize.QueryTypes.SELECT})
                 .then(function(friends) {
                     res.status(200).json(friends);
                 })
@@ -108,7 +119,7 @@ module.exports = function(app) {
 
     /** Find a friend by username/email ID or phone number **/
     router.post(
-        '/user/:uid/friend/find', [jwtAuth], function(req, res) {
+        '/user/:uid/friends/find', [jwtAuth], function(req, res) {
             if (!req.body.username) {
                 res.status(400).json({error:'MALFORMED_REQUEST'});
             }

@@ -1,6 +1,6 @@
 var jwtToken = require(__dirname + '/../controllers/jwtGenerate');
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
-var matchUser = require(__dirname+'/../controllers/matchUser');
+var verifyOwnUserAccount = require(__dirname+'/../controllers/verifyOwnUserAccount');
 var express = require('express');
 var router  = express.Router();
 var passport = require('passport');
@@ -46,7 +46,7 @@ module.exports = function(app, passport) {
      * @todo compare requested uid with uid encoded in JWT for match */
 
     router.get(
-      '/user/:uid/account/fetch', [jwtAuth, matchUser],
+      '/user/:uid/account/fetch', [jwtAuth, verifyOwnUserAccount],
         function(req, res) {
             User.findById(req.params.uid).then(function (user) {
                 if (user) {
@@ -62,7 +62,7 @@ module.exports = function(app, passport) {
     /**
      * @todo Need to verify email address and password after update */
     router.put(
-        '/user/:uid/account/update', [jwtAuth, matchUser],
+        '/user/:uid/account/update', [jwtAuth, verifyOwnUserAccount],
         function (req, res) {
             User.update(req.body,
                 {where: {id: req.params.uid}, individualHooks: true, returning: true, limit: 1}).then(function (user) {

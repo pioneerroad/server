@@ -1,13 +1,12 @@
 "use strict";
+var models = require(__dirname);
+var Profiles = models.user_profiles;
+var User = models.user_accounts;
+
+var md5 = require('md5');
 
 module.exports = function(sequelize, DataTypes) {
   var Friend = sequelize.define("relationship_friends", {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      unique: true,
-      autoIncrement: true
-    },
     status: {
       type: DataTypes.ENUM('pending', 'ignore', 'active', 'blocked'),
       allowNull: false,
@@ -18,36 +17,59 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.JSONB,
       allowNull: true
     },
-    friendA: {
+    userA: {
       type: DataTypes.INTEGER,
-      unique: 'compositeIndex' // Composite index prevents multiple identical friend connections
+      unique: 'userPair'
     },
-    friendB: {
+    userB: {
       type: DataTypes.INTEGER,
-      unique: 'compositeIndex' // Composite index prevents multiple identical friend connections
+      unique: 'userPair'
     },
     initiator: {
       type: DataTypes.INTEGER,
       unique: false,
-      allowNull: false
+      allowNull: false,
+      references: {
+        model: "user_accounts",
+        key: "id"
+      }
     },
     recipient: {
       type: DataTypes.INTEGER,
       unique: false,
-      allowNull: false
+      allowNull: false,
+      references: {
+        model: "user_accounts",
+        key: "id"
+      }
     },
     lastStatusUpdateBy: {
       type: DataTypes.INTEGER,
       unique: false,
       notNull: true
-    }}, {
-      hooks: {
-        afterUpdate: function(data, options, fn) {
-
-          return fn();
-        }
+    }
+  }, {
+    hooks: {
+      beforeCreate: function(friend, options, fn) {
+        console.log('****** Trace ********')
+        console.log(friend);
+        var orderedPair = createOrderedPair(friend.initiator, friend.recipient);
+        friend.userA = orderedPair[0];
+        friend.userB = orderedPair[1];
+        fn(null, friend);
       }
+    }
   });
 
   return Friend;
 };
+
+function createOrderedPair(friendA, friendB) {
+  if (friendA == friendB) {
+    return false;
+  }
+  var unorderedPair = [friendA, friendB];
+  var orderedPair = unorderedPair.sort(function(a,b){return a - b;});
+
+  return orderedPair;
+}
