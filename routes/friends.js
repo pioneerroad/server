@@ -93,7 +93,7 @@ module.exports = function(app) {
     );
 
     router.get(
-        '/user/:uid/friends/active-list', [jwtAuth, verifyOwnUserAccount],
+        '/user/:uid/friends/active', [jwtAuth, verifyOwnUserAccount],
         function (req, res) {
             friendAction.listActiveFriends(req.params.uid).then(function(data) {
                 res.json(data);
