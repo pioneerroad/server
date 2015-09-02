@@ -164,7 +164,7 @@ module.exports = function(app, s3) {
                                 if (processedImageSizes.hasOwnProperty(key)) {
                                     (function(imageSize) {
                                         if (imageSize == 'original') { // If this is the original image size, then just upload it
-                                            params.Key = 'profile-photos/'+userData.username+'/'+image.name;
+                                            params.Key = 'profile-photos/'+userData.id+'/'+image.name;
                                             params.Body = fs.createReadStream(image.path);
                                             return imageUploadS3.s3Upload(params)
                                                 .then(function(uploadData) {
@@ -179,7 +179,7 @@ module.exports = function(app, s3) {
                                                 .resize(processedImageSizes[imageSize].width)
                                                 .writeAsync('temp/uploads/'+image.fileNameBase+'_'+processedImageSizes[imageSize].width+'x'+processedImageSizes[imageSize].height+'.jpg')
                                                 .then(function(imageData) {
-                                                    params.Key = 'profile-photos/'+userData.username+'/'+image.fileNameBase+'_'+processedImageSizes[imageSize].width+'x'+processedImageSizes[imageSize].height+'.jpg';
+                                                    params.Key = 'profile-photos/'+userData.id+'/'+image.fileNameBase+'_'+processedImageSizes[imageSize].width+'x'+processedImageSizes[imageSize].height+'.jpg';
                                                     params.Body = fs.createReadStream('temp/uploads/'+image.fileNameBase+'_'+processedImageSizes[imageSize].width+'x'+processedImageSizes[imageSize].height+'.jpg');
                                                     return imageUploadS3.s3Upload(params)
                                                         .then(function(uploadData) {
@@ -253,7 +253,7 @@ module.exports = function(app, s3) {
                                 if (processedImageSizes.hasOwnProperty(key)) {
                                     (function(imageSize) {
                                         if (imageSize == 'original') { // If this is the original image size, then just upload it
-                                            params.Key = 'profile-photos/'+userData.username+'/background-photos/'+image.name;
+                                            params.Key = 'profile-photos/'+userData.id+'/background-photos/'+image.name;
                                             params.Body = fs.createReadStream(image.path);
                                             return imageUploadS3.s3Upload(params)
                                                 .then(function(uploadData) {
@@ -268,7 +268,7 @@ module.exports = function(app, s3) {
                                                 .resize(processedImageSizes[imageSize].width)
                                                 .writeAsync('temp/uploads/'+image.fileNameBase+'_'+processedImageSizes[imageSize].width+'x'+processedImageSizes[imageSize].height+'.jpg')
                                                 .then(function(imageData) {
-                                                    params.Key = 'profile-photos/'+userData.username+'/background-photos/'+image.fileNameBase+'_'+processedImageSizes[imageSize].width+'x'+processedImageSizes[imageSize].height+'.jpg';
+                                                    params.Key = 'profile-photos/'+userData.id+'/background-photos/'+image.fileNameBase+'_'+processedImageSizes[imageSize].width+'x'+processedImageSizes[imageSize].height+'.jpg';
                                                     params.Body = fs.createReadStream('temp/uploads/'+image.fileNameBase+'_'+processedImageSizes[imageSize].width+'x'+processedImageSizes[imageSize].height+'.jpg');
                                                     return imageUploadS3.s3Upload(params)
                                                         .then(function(uploadData) {
