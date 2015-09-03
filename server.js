@@ -1,5 +1,6 @@
 "use strict"
 var express = require('express');
+var router  = express.Router();
 var cors = require('cors');
 var app = express();
 var bodyParser = require('body-parser');
@@ -33,15 +34,15 @@ app.use(multer({dest: './temp/uploads/', limits: {fileSize:10*1024*1024}, rename
  * */
 var routeRoot = '/api/v1';
 var indexRoutes = require('./routes/index'); app.use(routeRoot, indexRoutes);
-var userRoutes = require('./routes/user_account') (app, passport); app.use(routeRoot, userRoutes);
-var profileRoutes = require('./routes/user_profile') (app, s3); app.use(routeRoot, profileRoutes);
-var friendRoutes = require('./routes/friends') (app); app.use(routeRoot, friendRoutes);
-var privacyRoutes = require('./routes/user_privacy') (app); app.use(routeRoot, privacyRoutes);
+var userRoutes = require('./routes/user_account') (app, passport, router); app.use(routeRoot, userRoutes);
+var profileRoutes = require('./routes/user_profile') (app, s3, router); app.use(routeRoot, profileRoutes);
+var friendRoutes = require('./routes/friends') (app, router); app.use(routeRoot, friendRoutes);
+var privacyRoutes = require('./routes/user_privacy') (app, router); app.use(routeRoot, privacyRoutes);
 //var vehicleRoutes = require('./routes/vehicle') (app); app.use(routeRoot, vehicleRoutes);
 
 /** Management and utility routes*/
-var utilityRoutes = require('./routes/utilities') (app); app.use(routeRoot, utilityRoutes);
-var userManagementRoutes = require('./routes/user_account_management') (app); app.use(routeRoot, userManagementRoutes);
+var utilityRoutes = require('./routes/utilities') (app, router); app.use(routeRoot, utilityRoutes);
+var userManagementRoutes = require('./routes/user_account_management') (app, router); app.use(routeRoot, userManagementRoutes);
 
 
 // catch 404 and forward to error handler

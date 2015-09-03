@@ -4,15 +4,14 @@ var accessOwner = require(__dirname+'/../controllers/access_controllers/accessOw
 var accessHasRelationship = require(__dirname+'/../controllers/access_controllers/accessHasRelationship');
 var accessPublic = require(__dirname+'/../controllers/access_controllers/accessPublic');
 var accessVerify = require(__dirname+'/../controllers/access_controllers/accessVerify');
-var express = require('express');
-var router  = express.Router();
+
 var Promise = require('bluebird');
 var gm = require('gm').subClass({imageMagick:true});
 Promise.promisifyAll(gm.prototype);
 var fs = Promise.promisifyAll(require('fs'));
 
 
-module.exports = function(app, s3) {
+module.exports = function(app, s3, router) {
     var Profile = app.get('models').user_profile;
     var User = app.get('models').user_account;
     var Towns = app.get('models').dataSet_towns;

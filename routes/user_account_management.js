@@ -4,10 +4,8 @@ var accessOwner = require(__dirname+'/../controllers/access_controllers/accessOw
 var accessHasRelationship = require(__dirname+'/../controllers/access_controllers/accessHasRelationship');
 var accessPublic = require(__dirname+'/../controllers/access_controllers/accessPublic');
 var accessVerify = require(__dirname+'/../controllers/access_controllers/accessVerify');
-var express = require('express');
-var router  = express.Router();
 
-module.exports = function(app) {
+module.exports = function(app, router) {
     var User = app.get('models').user_account;
 
     router.get(

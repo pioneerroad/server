@@ -5,10 +5,7 @@ var accessHasRelationship = require(__dirname+'/../controllers/access_controller
 var accessPublic = require(__dirname+'/../controllers/access_controllers/accessPublic');
 var accessVerify = require(__dirname+'/../controllers/access_controllers/accessVerify');
 
-var express = require('express');
-var router  = express.Router();
-
-module.exports = function(app) {
+module.exports = function(app, router) {
     /** Endpoint for hometown selection (autosuggest on client) */
     router.get(
         '/town/select/:input', [jwtAuth, accessPublic, accessVerify], function (req, res) {

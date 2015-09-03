@@ -5,13 +5,11 @@ var accessHasRelationship = require(__dirname+'/../controllers/access_controller
 var accessPublic = require(__dirname+'/../controllers/access_controllers/accessPublic');
 var accessVerify = require(__dirname+'/../controllers/access_controllers/accessVerify');
 
-var express = require('express');
-var router  = express.Router();
 var friendController = require(__dirname+'/../controllers/friendController');
 var friendAction = new friendController();
 var rawSQL = require(__dirname+'/../controllers/rawQueries');
 
-module.exports = function(app) {
+module.exports = function(app, router) {
     var User = app.get('models').user_account;
     var Friend = app.get('models').friend_connection;
 

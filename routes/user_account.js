@@ -6,13 +6,7 @@ var accessHasRelationship = require(__dirname+'/../controllers/access_controller
 var accessPublic = require(__dirname+'/../controllers/access_controllers/accessPublic');
 var accessVerify = require(__dirname+'/../controllers/access_controllers/accessVerify');
 
-console.log(accessAdmin);
-
-var express = require('express');
-var router  = express.Router();
-var passport = require('passport');
-
-module.exports = function(app, passport) {
+module.exports = function(app, passport, router) {
     var User = app.get('models').user_account;
     var Privacy = app.get('models').user_privacy;
     var Profile = app.get('models').user_profile;
