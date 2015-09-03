@@ -1,6 +1,13 @@
 var jwtToken = require(__dirname + '/../controllers/jwtGenerate');
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
-var verifyOwnUserAccount = require(__dirname+'/../controllers/verifyOwnUserAccount');
+var accessAdmin = require(__dirname+'/../controllers/access_controllers/accessAdmin');
+var accessOwner = require(__dirname+'/../controllers/access_controllers/accessOwner');
+var accessHasRelationship = require(__dirname+'/../controllers/access_controllers/accessHasRelationship');
+var accessPublic = require(__dirname+'/../controllers/access_controllers/accessPublic');
+var accessVerify = require(__dirname+'/../controllers/access_controllers/accessVerify');
+
+console.log(accessAdmin);
+
 var express = require('express');
 var router  = express.Router();
 var passport = require('passport');
@@ -46,7 +53,7 @@ module.exports = function(app, passport) {
      * @todo compare requested uid with uid encoded in JWT for match */
 
     router.get(
-      '/user/:uid/account/fetch', [jwtAuth, verifyOwnUserAccount],
+      '/user/:uid/account/fetch', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function(req, res) {
             User.findById(req.params.uid).then(function (user) {
                 if (user) {
@@ -62,7 +69,7 @@ module.exports = function(app, passport) {
     /**
      * @todo Need to verify email address and password after update */
     router.put(
-        '/user/:uid/account/update', [jwtAuth, verifyOwnUserAccount],
+        '/user/:uid/account/update', [jwtAuth, accessAdmin, accessOwner, accessHasRelationship, accessVerify],
         function (req, res) {
             User.update(req.body,
                 {where: {id: req.params.uid}, individualHooks: true, returning: true, limit: 1}).then(function (user) {

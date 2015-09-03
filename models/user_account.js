@@ -24,7 +24,7 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     type: {
-      type: DataTypes.ENUM, values:['user','business'],
+      type: DataTypes.ENUM, values:['user','administrator'],
       allowNull: false,
       defaultValue: 'user'
     },

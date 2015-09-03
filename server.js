@@ -37,7 +37,7 @@ var userRoutes = require('./routes/user_account') (app, passport); app.use(route
 var profileRoutes = require('./routes/user_profile') (app, s3); app.use(routeRoot, profileRoutes);
 var friendRoutes = require('./routes/friends') (app); app.use(routeRoot, friendRoutes);
 var privacyRoutes = require('./routes/user_privacy') (app); app.use(routeRoot, privacyRoutes);
-// var vehicleRoutes = require('./routes/vehicle') (app); app.use(routeRoot, vehicleRoutes);
+//var vehicleRoutes = require('./routes/vehicle') (app); app.use(routeRoot, vehicleRoutes);
 
 /** Management and utility routes*/
 var utilityRoutes = require('./routes/utilities') (app); app.use(routeRoot, utilityRoutes);

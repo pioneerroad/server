@@ -1,5 +1,10 @@
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
-var verifyOwnUserAccount = require(__dirname+'/../controllers/verifyOwnUserAccount');
+var accessAdmin = require(__dirname+'/../controllers/access_controllers/accessAdmin');
+var accessOwner = require(__dirname+'/../controllers/access_controllers/accessOwner');
+var accessHasRelationship = require(__dirname+'/../controllers/access_controllers/accessHasRelationship');
+var accessPublic = require(__dirname+'/../controllers/access_controllers/accessPublic');
+var accessVerify = require(__dirname+'/../controllers/access_controllers/accessVerify');
+
 var express = require('express');
 var router  = express.Router();
 var friendController = require(__dirname+'/../controllers/friendController');
@@ -15,7 +20,7 @@ module.exports = function(app) {
     // 2. If not, insert request
     // 3. Trigger notification
     router.post(
-        '/user/:uid/friends/create', [jwtAuth, verifyOwnUserAccount],
+        '/user/:uid/friends/create', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function(req, res) {
             if (!req.body.recipientId || !req.params.uid) {
                 res.status(400).json({error:'FRIEND_REQ_MALFORMED'});
@@ -33,7 +38,7 @@ module.exports = function(app) {
     // 3. Insert relationship metadata
     // 4. Trigger notification
     router.put(
-      '/user/:uid/friends/accept', [jwtAuth, verifyOwnUserAccount],
+      '/user/:uid/friends/accept', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function(req, res) {
             if (!req.body.friendRelationshipId || !req.params.uid) {
                 res.status(400).json({error:'MALFORMED_REQUEST'});
@@ -47,7 +52,7 @@ module.exports = function(app) {
         // 3. Insert relationship metadata
         // 4. Trigger notification
     router.put(
-        '/user/:uid/friends/ignore', [jwtAuth, verifyOwnUserAccount],
+        '/user/:uid/friends/ignore', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function(req, res) {
             if (!req.body.friendRelationshipId || !req.params.uid) {
                 res.status(400).json({error:'MALFORMED_REQUEST'});
@@ -59,7 +64,7 @@ module.exports = function(app) {
 
     /** PUT: Change friendship status (block friend) */
     router.put(
-        '/user/:uid/friends/block', [jwtAuth, verifyOwnUserAccount],
+        '/user/:uid/friends/block', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function(req, res) {
                 if (!req.body.blockId) {
                     res.status(400).json({error:'MALFORMED_REQUEST'})
@@ -72,7 +77,7 @@ module.exports = function(app) {
 
     /** PUT: Change friendship status (unblock friend) */
     router.put(
-        '/user/:uid/friends/unblock', [jwtAuth, verifyOwnUserAccount],
+        '/user/:uid/friends/unblock', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function(req, res) {
             if (!req.body.unblockId) {
                 res.status(400).json({error:'MALFORMED_REQUEST'})
@@ -84,7 +89,7 @@ module.exports = function(app) {
     );
 
     router.get(
-        '/user/:uid/friends/pending', [jwtAuth, verifyOwnUserAccount],
+        '/user/:uid/friends/pending', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function (req, res) {
             friendAction.pendingFriendList(req.params.uid).then(function(data) {
                 res.json(data);
@@ -93,7 +98,7 @@ module.exports = function(app) {
     );
 
     router.get(
-        '/user/:uid/friends/active', [jwtAuth, verifyOwnUserAccount],
+        '/user/:uid/friends/active', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function (req, res) {
             friendAction.listActiveFriends(req.params.uid).then(function(data) {
                 res.json(data);
@@ -104,7 +109,7 @@ module.exports = function(app) {
 
     /** Get list of nearby friends */
     router.get(
-        '/user/:uid/friends/nearby', [jwtAuth, verifyOwnUserAccount],
+        '/user/:uid/friends/nearby', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function(req, res) {
             var models = app.get('models');
             var friendList = models.sequelize.query(rawSQL.friendsNearby, {replacements: {uid:req.params.uid}, type: models.sequelize.QueryTypes.SELECT})
@@ -119,7 +124,7 @@ module.exports = function(app) {
 
     /** Find a friend by username/email ID or phone number **/
     router.post(
-        '/user/:uid/friends/find', [jwtAuth], function(req, res) {
+        '/user/:uid/friends/find', [jwtAuth, accessPublic, accessVerify], function(req, res) {
             if (!req.body.username) {
                 res.status(400).json({error:'MALFORMED_REQUEST'});
             }

@@ -1,11 +1,16 @@
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
-var verifyOwnUserAccount = require(__dirname+'/../controllers/verifyOwnUserAccount');
+var accessAdmin = require(__dirname+'/../controllers/access_controllers/accessAdmin');
+var accessOwner = require(__dirname+'/../controllers/access_controllers/accessOwner');
+var accessHasRelationship = require(__dirname+'/../controllers/access_controllers/accessHasRelationship');
+var accessPublic = require(__dirname+'/../controllers/access_controllers/accessPublic');
+var accessVerify = require(__dirname+'/../controllers/access_controllers/accessVerify');
 var express = require('express');
 var router  = express.Router();
 var Promise = require('bluebird');
 var gm = require('gm').subClass({imageMagick:true});
 Promise.promisifyAll(gm.prototype);
 var fs = Promise.promisifyAll(require('fs'));
+
 
 module.exports = function(app, s3) {
     var Profile = app.get('models').user_profile;
@@ -17,9 +22,10 @@ module.exports = function(app, s3) {
      * Note: should only be used for loading a user's own account; different methods required to load other user profiles.
      */
 
-    router.get(
-        '/user/:uid/profile/fetch', [jwtAuth, verifyOwnUserAccount],
+    router.post(
+        '/user/:uid/profile/fetch', [jwtAuth, accessAdmin, accessOwner, accessHasRelationship, accessVerify],
         function (req, res) {
+            console.log(res.userAccess);
             Profile.find({where: {userAccountId: req.params.uid},include:[Towns]}).then(function (data) {
                 if (data) {
                     res.status(200).json(data);
@@ -33,7 +39,7 @@ module.exports = function(app, s3) {
     /**
      * Update nickName field */
     router.put(
-        '/user/:uid/profile/update/nickname', [jwtAuth, verifyOwnUserAccount],
+        '/user/:uid/profile/update/nickname', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function (req, res) {
             if (!req.body.nickName) {
                 res.status(400).json({message: "MISSING_DATA_NICKNAME"})
@@ -58,7 +64,7 @@ module.exports = function(app, s3) {
     /**
      * Update homeTown field */
     router.put(
-        '/user/:uid/profile/update/hometown', [jwtAuth, verifyOwnUserAccount],
+        '/user/:uid/profile/update/hometown', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function (req, res) {
             if (!req.body.homeTownId) {
                 res.status(400).json({message: "MISSING_DATA_HOMETOWN"})
@@ -80,7 +86,7 @@ module.exports = function(app, s3) {
     );
 
     router.get(
-        '/user/:uid/profile/hometown', [jwtAuth, verifyOwnUserAccount],
+        '/user/:uid/profile/hometown', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function (req, res) {
             Profile.find({where: {userAccountId: req.params.uid}}).then(function (data) {
                 if (data) {
@@ -95,7 +101,7 @@ module.exports = function(app, s3) {
     /**
      * Update current location */
     router.put(
-        '/user/:uid/profile/update/current-location', [jwtAuth, verifyOwnUserAccount],
+        '/user/:uid/profile/update/current-location', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function (req, res) {
             var dataStoreLocation = app.get('models').dataStore_location;
                 if (!req.body.lat || !req.body.lon) {
@@ -124,7 +130,7 @@ module.exports = function(app, s3) {
     );
 
     /** Endpoint for user profile photo upload **/
-    router.put('/user/:uid/profile/update/photo', [jwtAuth, verifyOwnUserAccount],
+    router.put('/user/:uid/profile/update/photo', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function (req, res) {
             var uid = req.params.uid;
             var image = req.files.image; image.fileNameBase = image.name.slice(0, image.name.indexOf('.')); //Store the filename without extension
@@ -217,7 +223,7 @@ module.exports = function(app, s3) {
     });
 
     /** Endpoint for user profile background photo upload **/
-    router.put('/user/:uid/profile/update/background-photo', [jwtAuth, verifyOwnUserAccount],
+    router.put('/user/:uid/profile/update/background-photo', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function (req, res) {
             var uid = req.params.uid;
             var image = req.files.image; image.fileNameBase = image.name.slice(0, image.name.indexOf('.')); //Store the filename without extension
@@ -304,25 +310,18 @@ module.exports = function(app, s3) {
                 });
         });
 
-        /** Get the nearest town to the current user */
-        router.get('/user/:uid/current-location', [jwtAuth, verifyOwnUserAccount],
-            function(req, res) {
-                var models = app.get('models');
-                var currentLocation = models.sequelize.query('SELECT towns."location", "user_profiles"."currentLocation"->\'updatedAt\' AS timestamp, towns."tourism_region", towns."state", ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) / 1000 AS distance FROM "dataSet_towns" AS towns, "user_profiles" WHERE ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) < 100000 ORDER BY ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) LIMIT 1;', {replacements:{uid:req.params.uid}, type: models.sequelize.QueryTypes.SELECT})
-                    .spread(function(response, metadata) {
-                        res.status(200).json(response);
-                    })
-                    .error(function(err) {
-                        res.status(400).json(err);
-                    });
-            });
-
-        router.get('/test', function(req, res) {
-            var test = require(__dirname+'/../controllers/friendController');
-            test.initiateFriendRequest(20, 8).then(function(data) {
-                res.json(data);
-            })
-        })
+    /** Get the nearest town to the current user */
+    router.get('/user/:uid/current-location', [jwtAuth, accessAdmin, accessOwner, accessVerify],
+        function(req, res) {
+            var models = app.get('models');
+            var currentLocation = models.sequelize.query('SELECT towns."location", "user_profiles"."currentLocation"->\'updatedAt\' AS timestamp, towns."tourism_region", towns."state", ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) / 1000 AS distance FROM "dataSet_towns" AS towns, "user_profiles" WHERE ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) < 100000 ORDER BY ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) LIMIT 1;', {replacements:{uid:req.params.uid}, type: models.sequelize.QueryTypes.SELECT})
+                .spread(function(response, metadata) {
+                    res.status(200).json(response);
+                })
+                .error(function(err) {
+                    res.status(400).json(err);
+                });
+        });
 
         return router;
 };

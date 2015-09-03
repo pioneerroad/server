@@ -1,5 +1,9 @@
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
-var verifyOwnUserAccount = require(__dirname+'/../controllers/verifyOwnUserAccount');
+var accessAdmin = require(__dirname+'/../controllers/access_controllers/accessAdmin');
+var accessOwner = require(__dirname+'/../controllers/access_controllers/accessOwner');
+var accessHasRelationship = require(__dirname+'/../controllers/access_controllers/accessHasRelationship');
+var accessPublic = require(__dirname+'/../controllers/access_controllers/accessPublic');
+var accessVerify = require(__dirname+'/../controllers/access_controllers/accessVerify');
 var express = require('express');
 var router  = express.Router();
 
@@ -7,7 +11,7 @@ module.exports = function(app) {
     var User = app.get('models').user_account;
 
     router.get(
-        '/admin/user/account/list',
+        '/admin/user/account/list', [jwtAuth, accessAdmin, accessVerify],
         function(req, res) {
             User.findAll({attributes: ['id','username','mobile']})
                 .then(function(data) {
@@ -21,7 +25,7 @@ module.exports = function(app) {
     );
 
     router.delete(
-        '/admin/user/:uid/account/delete',
+        '/admin/user/:uid/account/delete', [jwtAuth, accessAdmin, accessVerify],
         function(req, res) {
             User.destroy({
                 where: {
