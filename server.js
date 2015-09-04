@@ -10,6 +10,16 @@ var https = require('https');
 var logger = require('morgan');
 var multer = require('multer');
 var AWS = require('aws-sdk'); AWS.config.update({region: 'ap-southeast-2'}); var s3 = new AWS.S3(); // Load AWS SDK and set default region
+var socketIo = require('socket.io');
+var jwtSecret = require(__dirname+'/config/jwtSecret').secret; // Secret token for signing JWTs
+/**
+ * Load server configuration
+ */
+
+var serverConfig = require(__dirname + '/config/serverConfig');
+var options = serverConfig.options;
+var ports = serverConfig.ports;
+var server = http.createServer(app);
 
 /**
  *  Load models
@@ -20,7 +30,7 @@ app.set('models', models);
 /**
  * Initialise components and middleware
  * */
-app.use(cors());
+app.use(cors({origin: 'http://localhost:3000'}));
 app.use(passport.initialize());
 require (__dirname + '/controllers/passport') (app, passport);
 app.use(logger('dev')); // Logs calls by Express routes to terminal
@@ -28,6 +38,26 @@ app.use(bodyParser.json()); // Use body-parser to extract data from POST
 app.use(bodyParser.urlencoded({ extended: false }));
 /** Multer defaults: upload files to /temp/uploads, max size = 10Mb per file, files are renamed to current datestamp **/
 app.use(multer({dest: './temp/uploads/', limits: {fileSize:10*1024*1024}, rename: function(fieldname, filename) {return Date.now();}}));
+
+/**
+ * Socket.io configuration
+ * */
+var io = socketIo.listen(server);
+
+var auth = function(data, done) {
+    console.log(data);
+    if (data.token == 'test') {
+        done();
+    } else {
+        done(new Error('bad credentials')) // or any error message
+    }
+};
+
+require('socket.io-auth') (io, auth, function(socket) {
+    socket.on('ping', function(data) {
+        socket.emit('pong', data);
+    });
+})
 
 /**
  * Initialise Routes
@@ -53,23 +83,13 @@ app.use(function(req, res, next) {
 });
 
 /**
- * Load server configuration
- */
-
-var serverConfig = require(__dirname + '/config/serverConfig');
-var options = serverConfig.options;
-var ports = serverConfig.ports;
-
-/**
  * Synchronise models and launch server
  * */
 
-models.sequelize.sync().then(function () {
+/*models.sequelize.sync().then(function () {*/
     //var modelSync = require(__dirname + '/migrations/sync_models') (models); // Apply non-sequelizeable elements to tables
 
-    var server = app.listen(ports.noSSLPort, function() {
-      var host = server.address().address;
-      var port = server.address().port;
-      console.log('Listening at http: ' + port);
-    }); // Start the server
-});
+    server.listen(ports.noSSLPort, function() {
+        console.log('Listening on http://localhost:'+ports.noSSLPort);
+    });
+/*});*/
