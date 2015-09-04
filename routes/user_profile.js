@@ -24,8 +24,8 @@ module.exports = function(app, s3, router) {
     router.post(
         '/user/:uid/profile/fetch', [jwtAuth, accessAdmin, accessOwner, accessHasRelationship, accessPublic, accessVerify],
         function (req, res) {
-            console.log(res.userAccess);
-            Profile.find({where: {userAccountId: req.params.uid},include:[Towns]}).then(function (data) {
+            var resourceOwnerId = req.body.resourceOwnerId ? req.body.resourceOwnerId : req.params.uid;
+            Profile.find({where: {userAccountId: resourceOwnerId},include:[Towns]}).then(function (data) {
                 if (data) {
                     res.status(200).json(data);
                 } else {
