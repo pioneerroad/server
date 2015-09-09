@@ -11,11 +11,11 @@ Promise.promisifyAll(gm.prototype);
 var fs = Promise.promisifyAll(require('fs'));
 
 
-module.exports = function(app, s3, router) {
+module.exports = function(app, userSockets, s3, router) {
     var Profile = app.get('models').user_profile;
     var User = app.get('models').user_account;
     var Towns = app.get('models').dataSet_towns;
-
+    var io = app.io;
     /**
      * Get a single user with UID
      * Note: should only be used for loading a user's own account; different methods required to load other user profiles.
@@ -40,6 +40,7 @@ module.exports = function(app, s3, router) {
     router.put(
         '/user/:uid/profile/update/nickname', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function (req, res) {
+            var uid = req.params.uid;
             if (!req.body.nickName) {
                 res.status(400).json({message: "MISSING_DATA_NICKNAME"})
             } else {
@@ -50,8 +51,8 @@ module.exports = function(app, s3, router) {
                         individualHooks: true,
                         returning: true,
                         limit: 1
-                    }).then(function (numRows) {
-                        res.status(200).json(numRows);
+                    }).then(function (data) {
+                        res.status(200).json(data);
                     }).catch(function (err) {
                         console.log(err);
                         res.status(400).json(err);
@@ -205,7 +206,6 @@ module.exports = function(app, s3, router) {
                             Profile.findOne({
                                 where: {userAccountId:uid}
                             }).then (function (profile) {
-                                console.log(profile);
                                 profile.updateAttributes({
                                     profilePhoto: profilePhotoData
                                 });

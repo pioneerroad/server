@@ -1,3 +1,5 @@
+var Promise = require('bluebird');
+
 var jwtAuth = require(__dirname+'/../controllers/jwtAuth');
 var accessAdmin = require(__dirname+'/../controllers/access_controllers/accessAdmin');
 var accessOwner = require(__dirname+'/../controllers/access_controllers/accessOwner');
@@ -9,9 +11,11 @@ var friendController = require(__dirname+'/../controllers/friendController');
 var friendAction = new friendController();
 var rawSQL = require(__dirname+'/../controllers/rawQueries');
 
-module.exports = function(app, router) {
+module.exports = function(app, userSockets, router) {
+    var io = app.io;
     var User = app.get('models').user_account;
     var Friend = app.get('models').friend_connection;
+    var Profile = app.get('models').user_profile;
 
     /** POST: Initiate a friend request*/
     // 1. Check if relationship already exists in direct or reciprocal form
@@ -26,8 +30,29 @@ module.exports = function(app, router) {
             if (!req.body.placeId) {
                 req.body.placeId = null;
             }
-            friendAction.createFriendRequest(req.params.uid, req.body.recipientId, {place: req.body.placeId}).then(function(response) {
-                res.json(response);
+            var friendRequest = friendAction.createFriendRequest(req.params.uid, req.body.recipientId, {place: req.body.placeId}).then(function(response) {
+                return response;
+            });
+
+            // Get user profile of user who made req so this can be piped to the recipient through socket.io
+            var getUserProfile = friendRequest.then(function(data) {
+                return Profile.findOne({
+                    where: {
+                        userAccountId : data.initiator
+                    }},{raw:true});
+            });
+
+
+            return Promise.all([friendRequest, getUserProfile]).spread(function(friendRequestData, userProfileData) {
+                if (friendRequestData.error) {
+                    res.status(400).json(friendRequestData.error);
+                } else {
+                    if (userSockets[friendRequestData.recipient]) {
+                        console.log(userSockets[friendRequestData.recipient]);
+                        io.to(userSockets[friendRequestData.recipient].sessionId).emit('friend request',userProfileData.dataValues);
+                    }
+                    res.status(200).json(friendRequestData);
+                }
             });
         }
     );

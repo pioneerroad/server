@@ -7,6 +7,7 @@ var accessPublic = require(__dirname+'/../controllers/access_controllers/accessP
 var accessVerify = require(__dirname+'/../controllers/access_controllers/accessVerify');
 
 module.exports = function(app, passport, router) {
+    var io = app.io;
     var User = app.get('models').user_account;
     var Privacy = app.get('models').user_privacy;
     var Profile = app.get('models').user_profile;
@@ -34,9 +35,8 @@ module.exports = function(app, passport, router) {
                 return false;
             }
             if (req.user) { // Username and password OK, give the user a token
-                var token = jwtToken(req.app, req.user);
-                var response = {result:'LOGIN_SUCCESSFUL', data: token};
-                res.status(200).send(response);
+                var token = jwtToken(req.user);
+                res.status(200).send(token);
             }
         }
     );
@@ -63,8 +63,12 @@ module.exports = function(app, passport, router) {
     /**
      * @todo Need to verify email address and password after update */
     router.put(
-        '/user/:uid/account/update', [jwtAuth, accessAdmin, accessOwner, accessHasRelationship, accessVerify],
-        function (req, res) {
+        '/user/:uid/account/update', [jwtAuth, accessAdmin, accessOwner, accessVerify],
+        function (req, res, done) {
+            if (req.body.type) {
+                res.status(403).json({error:'PROPERTY_CANNOT_BE_CONFIGURED'});
+                return done();
+            }
             User.update(req.body,
                 {where: {id: req.params.uid}, individualHooks: true, returning: true, limit: 1}).then(function (user) {
                     var response = {result: 'UPDATE_USER_ACCOUNT_DATA', data: user};

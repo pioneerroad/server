@@ -29,7 +29,7 @@ module.exports = function(req, res, done) {
             res.userAccess.accessLevel = keys[0];
             return done();
         } else {
-            return done('ACCESS_DENIED');
+            res.status(403).json({error:'ACCESS_DENIED'});
         }
     }
 }

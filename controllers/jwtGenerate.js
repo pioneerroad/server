@@ -2,26 +2,14 @@
 // Generates a JWT Token
 'use strict';
 
-var jwt = require('jwt-simple');
-var moment = require('moment');
-var expires = moment().add(7, 'days').valueOf();
+var jwt = require('jsonwebtoken');
 var jwtSecret = require(__dirname+'/../config/jwtSecret').secret;
 
-module.exports = function(app, user) {
-    app.set('jwtTokenSecret', jwtSecret);
+module.exports = function(user) {
 
-    var token = jwt.encode({
-        iss: user.id,
-        exp: expires
-    }, app.get('jwtTokenSecret'));
+    var token = {token: jwt.sign(user, jwtSecret, {expiresInMinutes: 60*24*7})};
+    token.user = {id: user.dataValues.id, username: user.dataValues.username}; // Append user data to token object
 
-    var response = {
-        token: token,
-        expires: expires,
-        user: {
-            id: user.id,
-            username: user.username
-        }
-    };
-    return response;
+    return token;
+
 };

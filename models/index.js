@@ -53,6 +53,6 @@ db.cache_friend_list.belongsTo(db.user_account);
 
 db.sequelize = sequelize;
 
-sequelize.sync();
+//sequelize.sync();
 
 module.exports = db;
