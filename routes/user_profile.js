@@ -10,6 +10,8 @@ var gm = require('gm').subClass({imageMagick:true});
 Promise.promisifyAll(gm.prototype);
 var fs = Promise.promisifyAll(require('fs'));
 
+var models = require(__dirname+'/../models');
+var rawQueries = require(__dirname+'/../controllers/rawQueries');
 
 module.exports = function(app, userSockets, s3, router) {
     var Profile = app.get('models').user_profile;
@@ -103,28 +105,51 @@ module.exports = function(app, userSockets, s3, router) {
     router.put(
         '/user/:uid/profile/update/current-location', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function (req, res) {
-            var dataStoreLocation = app.get('models').dataStore_location;
+
                 if (!req.body.lat || !req.body.lon) {
                     res.status(400).json({message: "MISSING_OR_MALFORMED_DATA_LOCATION"})
                 } else {
                     var coordsObj = {
                         'lat': parseFloat(req.body.lat),
-                        'lon' : parseFloat(req.body.lon)
+                        'lon': parseFloat(req.body.lon)
                     };
 
-                    var location = {currentLocation: {lat: coordsObj.lat, lon: coordsObj.lon, updatedAt: Date.now()}};
+                    var nearestTown = models.sequelize.query(rawQueries.nearestTown, {
+                        replacements: {
+                            lon: req.body.lon,
+                            lat: req.body.lat
+                        }
+                    }).then(function (response) {
+                        return response;
+                    });
 
-                    Profile.update(location,
-                        {
+                    var profileUpdate = nearestTown.then(function (responseNearestTown) {
+                        var data = responseNearestTown[0][0];
+                        var location = {
+                            currentLocation: {
+                                lat: coordsObj.lat,
+                                lon: coordsObj.lon,
+                                nearestTown: data.location,
+                                distanceToNearestTown: data.distance,
+                                state: data.state,
+                                tourismRegion: data.tourism_region,
+                                updatedAt: Date.now()
+                            }
+                        };
+
+                        return Profile.update(location, {
                             where: {userAccountId: req.params.uid},
                             individualHooks: true,
                             returning: true,
                             limit: 1
-                        }).then(function (data) {
-                            res.status(200).json(data);
-                        }).catch(function (err) {
-                            res.status(400).json(err);
+                        }).then(function (response) {
+                            return response;
                         });
+                    })
+
+                    return Promise.all([nearestTown, profileUpdate]).spread(function (nearestTownData, profileUpdateData) {
+                        res.status(200).json(profileUpdateData);
+                    });
                 }
         }
     );
