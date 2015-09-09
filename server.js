@@ -1,25 +1,17 @@
 "use strict"
 var express = require('express');
 var router  = express.Router();
-var cors = require('cors');
 var app = express();
-var bodyParser = require('body-parser');
-var passport = require('passport');
 var http = require('http');
 var https = require('https');
+var server = http.Server(app);
+var io = require('socket.io')(server); app.io = io; // Add io to app, to make it available to express routes.
+var cors = require('cors');
+var bodyParser = require('body-parser');
+var passport = require('passport');
 var logger = require('morgan');
 var multer = require('multer');
 var AWS = require('aws-sdk'); AWS.config.update({region: 'ap-southeast-2'}); var s3 = new AWS.S3(); // Load AWS SDK and set default region
-var socketIo = require('socket.io');
-var jwtSecret = require(__dirname+'/config/jwtSecret').secret; // Secret token for signing JWTs
-/**
- * Load server configuration
- */
-
-var serverConfig = require(__dirname + '/config/serverConfig');
-var options = serverConfig.options;
-var ports = serverConfig.ports;
-var server = http.createServer(app);
 
 /**
  *  Load models
@@ -42,22 +34,11 @@ app.use(multer({dest: './temp/uploads/', limits: {fileSize:10*1024*1024}, rename
 /**
  * Socket.io configuration
  * */
-var io = socketIo.listen(server);
+var userSockets = require(__dirname+'/controllers/socket.io-controller')(app);
 
-var auth = function(data, done) {
+io.on('welcome',function(data) {
     console.log(data);
-    if (data.token == 'test') {
-        done();
-    } else {
-        done(new Error('bad credentials')) // or any error message
-    }
-};
-
-require('socket.io-auth') (io, auth, function(socket) {
-    socket.on('ping', function(data) {
-        socket.emit('pong', data);
-    });
-})
+});
 
 /**
  * Initialise Routes
@@ -65,8 +46,8 @@ require('socket.io-auth') (io, auth, function(socket) {
 var routeRoot = '/api/v1';
 var indexRoutes = require('./routes/index'); app.use(routeRoot, indexRoutes);
 var userRoutes = require('./routes/user_account') (app, passport, router); app.use(routeRoot, userRoutes);
-var profileRoutes = require('./routes/user_profile') (app, s3, router); app.use(routeRoot, profileRoutes);
-var friendRoutes = require('./routes/friends') (app, router); app.use(routeRoot, friendRoutes);
+var profileRoutes = require('./routes/user_profile') (app, userSockets, s3, router); app.use(routeRoot, profileRoutes);
+var friendRoutes = require('./routes/friends') (app, userSockets, router); app.use(routeRoot, friendRoutes);
 var privacyRoutes = require('./routes/user_privacy') (app, router); app.use(routeRoot, privacyRoutes);
 //var vehicleRoutes = require('./routes/vehicle') (app); app.use(routeRoot, vehicleRoutes);
 
@@ -81,6 +62,14 @@ app.use(function(req, res, next) {
     err.status = 404;
     next(err);
 });
+
+/**
+ * Load server configuration
+ */
+
+var serverConfig = require(__dirname + '/config/serverConfig');
+var options = serverConfig.options;
+var ports = serverConfig.ports;
 
 /**
  * Synchronise models and launch server

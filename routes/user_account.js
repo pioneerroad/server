@@ -7,6 +7,7 @@ var accessPublic = require(__dirname+'/../controllers/access_controllers/accessP
 var accessVerify = require(__dirname+'/../controllers/access_controllers/accessVerify');
 
 module.exports = function(app, passport, router) {
+    var io = app.io;
     var User = app.get('models').user_account;
     var Privacy = app.get('models').user_privacy;
     var Profile = app.get('models').user_profile;
@@ -35,8 +36,7 @@ module.exports = function(app, passport, router) {
             }
             if (req.user) { // Username and password OK, give the user a token
                 var token = jwtToken(req.user);
-                var response = {result:'LOGIN_SUCCESSFUL', token: token};
-                res.status(200).send(response);
+                res.status(200).send(token);
             }
         }
     );

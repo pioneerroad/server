@@ -15,9 +15,9 @@ module.exports = function(friendA, friendB) {
                 recipient: parseInt(friendB),
                 metaData: metaData
             }).then(function(data) {
-                return data;
+                return data.dataValues;
             }).error(function(err) {
-                return err;
+                return {error:err};
             });
         } else {
             return {error:'INCORRECT_PARAMETERS'};
