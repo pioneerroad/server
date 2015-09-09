@@ -22,7 +22,7 @@ app.set('models', models);
 /**
  * Initialise components and middleware
  * */
-app.use(cors({origin: 'http://localhost:3000'}));
+app.use(cors({origin: ['http://localhost:3000','http://app.pioneeroad.com.au']}));
 app.use(passport.initialize());
 require (__dirname + '/controllers/passport') (app, passport);
 app.use(logger('dev')); // Logs calls by Express routes to terminal
