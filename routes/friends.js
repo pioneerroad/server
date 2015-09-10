@@ -8,7 +8,7 @@ var accessPublic = require(__dirname+'/../controllers/access_controllers/accessP
 var accessVerify = require(__dirname+'/../controllers/access_controllers/accessVerify');
 
 var friendController = require(__dirname+'/../controllers/friendController');
-var friendAction = new friendController();
+var friendCtrl = new friendController();
 var rawSQL = require(__dirname+'/../controllers/rawQueries');
 
 module.exports = function(app, userSockets, router) {
@@ -30,7 +30,7 @@ module.exports = function(app, userSockets, router) {
             if (!req.body.placeId) {
                 req.body.placeId = null;
             }
-            var friendRequest = friendAction.createFriendRequest(req.params.uid, req.body.recipientId, {place: req.body.placeId}).then(function(response) {
+            var friendRequest = friendCtrl.createFriendRequest(req.params.uid, req.body.recipientId, {place: req.body.placeId}).then(function(response) {
                 return response;
             });
 
@@ -66,7 +66,7 @@ module.exports = function(app, userSockets, router) {
             if (!req.body.friendRelationshipId || !req.params.uid) {
                 res.status(400).json({error:'MALFORMED_REQUEST'});
             }
-            friendAction.acceptFriendRequest(req.params.uid, req.body.friendRelationshipId).then(function(data) {
+            friendCtrl.acceptFriendRequest(req.params.uid, req.body.friendRelationshipId).then(function(data) {
                 res.json(data);
             });
         });
@@ -80,7 +80,7 @@ module.exports = function(app, userSockets, router) {
             if (!req.body.friendRelationshipId || !req.params.uid) {
                 res.status(400).json({error:'MALFORMED_REQUEST'});
             }
-            friendAction.ignoreFriendRequest(req.params.uid, req.body.friendRelationshipId).then(function(data) {
+            friendCtrl.ignoreFriendRequest(req.params.uid, req.body.friendRelationshipId).then(function(data) {
                 res.json(data);
             });
         });
@@ -92,7 +92,7 @@ module.exports = function(app, userSockets, router) {
                 if (!req.body.blockId) {
                     res.status(400).json({error:'MALFORMED_REQUEST'})
                 }
-                friendAction.blockFriend(req.params.uid, req.body.blockId).then(function(data) {
+                friendCtrl.blockFriend(req.params.uid, req.body.blockId).then(function(data) {
                     res.json(data);
                 });
         }
@@ -105,7 +105,7 @@ module.exports = function(app, userSockets, router) {
             if (!req.body.unblockId) {
                 res.status(400).json({error:'MALFORMED_REQUEST'})
             }
-            friendAction.unblockFriend(req.params.uid, req.body.unblockId).then(function(data) {
+            friendCtrl.unblockFriend(req.params.uid, req.body.unblockId).then(function(data) {
                 res.json(data);
             });
         }
@@ -114,7 +114,7 @@ module.exports = function(app, userSockets, router) {
     router.get(
         '/user/:uid/friends/pending', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function (req, res) {
-            friendAction.pendingFriendList(req.params.uid).then(function(data) {
+            friendCtrl.pendingFriendList(req.params.uid).then(function(data) {
                 res.json(data);
             })
         }
@@ -123,7 +123,7 @@ module.exports = function(app, userSockets, router) {
     router.get(
         '/user/:uid/friends/active', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function (req, res) {
-            friendAction.listActiveFriends(req.params.uid).then(function(data) {
+            friendCtrl.listActiveFriends(req.params.uid).then(function(data) {
                 res.json(data);
             });
         }
@@ -134,14 +134,17 @@ module.exports = function(app, userSockets, router) {
     router.get(
         '/user/:uid/friends/nearby', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function(req, res) {
-            var models = app.get('models');
-            var friendList = models.sequelize.query(rawSQL.friendsNearby, {replacements: {uid:req.params.uid}, type: models.sequelize.QueryTypes.SELECT})
+            if (!req.params.uid) {
+                res.status(400).json({error:'MALFORMED_REQUEST'});
+            }
+            friendCtrl.friendsNearby(req.params.uid)
                 .then(function(friends) {
                     res.status(200).json(friends);
                 })
                 .error(function(err) {
-                   res.status(400).json(err);
+                    res.status(400).json(err);
                 });
+
         }
     );
 
@@ -151,7 +154,7 @@ module.exports = function(app, userSockets, router) {
             if (!req.body.username) {
                 res.status(400).json({error:'MALFORMED_REQUEST'});
             }
-            friendAction.findFriend(req.body.username).then(function(data) {
+            friendCtrl.findFriend(req.body.username).then(function(data) {
                 res.json(data);
             })
         });

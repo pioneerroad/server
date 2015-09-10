@@ -1,7 +1,7 @@
 var jwt = require('jsonwebtoken');
 var jwtSecret = require(__dirname+'/../config/jwtSecret').secret;
 var User = require(__dirname+'/../models').user_account;
-var userSockets = {};
+var userSockets = Array();
 
 module.exports = function(app) {
     var io = app.io;
@@ -31,7 +31,7 @@ module.exports = function(app) {
                 try {
                     var decoded = jwt.verify(token, jwtSecret); // Decode the token
                     User.findById(decoded.id, {raw:true}).then(function(user) {
-                        userSockets[user.id] = {sessionId: socket.conn.id};
+                        userSockets.push({userId : user.id, sessionId: socket.conn.id});
                     }).error(function(err) {
                         throw new Error('AN_ERROR');
                     });
@@ -42,7 +42,7 @@ module.exports = function(app) {
                 throw new Error('AN_ERROR');
             }
         },
-        timeout: 1000
+        timeout: 10000
     });
 
     return userSockets;

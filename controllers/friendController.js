@@ -133,4 +133,14 @@ module.exports = function(friendA, friendB) {
             });
     }
 
+    this.friendsNearby = function(uid) {
+        return models.sequelize.query(rawSQL.friendsNearby, {replacements: {uid: uid, distance: 50}})
+            .spread(function(results, metadata) {
+                return results;
+            })
+            .error(function(err) {
+                return err;
+            });
+    }
+
 }

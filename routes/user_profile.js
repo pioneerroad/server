@@ -11,6 +11,8 @@ Promise.promisifyAll(gm.prototype);
 var fs = Promise.promisifyAll(require('fs'));
 
 var models = require(__dirname+'/../models');
+var friendController = require(__dirname+'/../controllers/friendController');
+var friendCtrl = new friendController();
 var rawQueries = require(__dirname+'/../controllers/rawQueries');
 
 module.exports = function(app, userSockets, s3, router) {
@@ -114,6 +116,7 @@ module.exports = function(app, userSockets, s3, router) {
                         'lon': parseFloat(req.body.lon)
                     };
 
+                    // Find the nearest town to the checked in user
                     var nearestTown = models.sequelize.query(rawQueries.nearestTown, {
                         replacements: {
                             lon: req.body.lon,
@@ -123,6 +126,7 @@ module.exports = function(app, userSockets, s3, router) {
                         return response;
                     });
 
+                    // Update the users profile (include closest town in currentLocation object)
                     var profileUpdate = nearestTown.then(function (responseNearestTown) {
                         var data = responseNearestTown[0][0];
                         var location = {
@@ -141,14 +145,44 @@ module.exports = function(app, userSockets, s3, router) {
                             where: {userAccountId: req.params.uid},
                             individualHooks: true,
                             returning: true,
-                            limit: 1
-                        }).then(function (response) {
-                            return response;
+                            limit: 1,
+                            raw: true
+                        }).spread(function (numRows, data) {
+                            console.log(data);
+                            return data;
                         });
-                    })
+                    });
 
-                    return Promise.all([nearestTown, profileUpdate]).spread(function (nearestTownData, profileUpdateData) {
-                        res.status(200).json(profileUpdateData);
+                    // Find which friends are nearby to current location
+                    var getFriendsNearby = profileUpdate.then(function(data) {
+                        var userId = data[0].userAccountId;
+                        return friendCtrl.friendsNearby(userId).then(function(data) {
+                            return data;
+                        });
+                    });
+
+                    // Aggregate promises
+                    return Promise.all([nearestTown, profileUpdate, getFriendsNearby]).spread(function (nearestTownData, profileUpdateData, friendsNearby) {
+                        var profile = profileUpdateData[0];
+
+                        // Iterate through all friends nearby
+                        for (var i = 0; i < friendsNearby.length; i++) {
+                            // Check userSocket to see if each nearby friend has a current socket connection open
+                            for (var j = 0; j < userSockets.length; j++) {
+                                if (friendsNearby[i].friendId == userSockets[j].userId) { // If a current socket exists
+                                    var friend = { // Compile an object to emit to the friends who are nearby
+                                        userAccountId: profile.userAccountId,
+                                        nickName: profile.nickName,
+                                        profilePhoto: profile.profilePhoto,
+                                        distance: friendsNearby[i].distance,
+                                        checkinTime: friendsNearby[i].checkinTime
+                                    };
+
+                                    io.to(userSockets[j].sessionId).emit('friend nearby', friend); // Send data to connected friends who are nearby
+                                }
+                            }
+                        }
+                        res.status(200).json(profileUpdateData); // Return a response via RESTful
                     });
                 }
         }
