@@ -50,7 +50,7 @@ module.exports = function(app, userSockets, router) {
                     for (var j = 0; j < userSockets.length; j++) {
 
                         if (userSockets[j].userId == friendRequestData.recipient) {
-                            io.to(userSockets[j].sessionId).emit('friend request',userProfileData.dataValues);
+                            io.to(userSockets[j].sessionId).emit('friend request');
                         }
                     }
                     res.status(200).json(friendRequestData);
