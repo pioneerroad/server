@@ -51,8 +51,6 @@ module.exports = function(sequelize, DataTypes) {
   }, {
     hooks: {
       beforeCreate: function(friend, options, fn) {
-        console.log('****** Trace ********')
-        console.log(friend);
         var orderedPair = createOrderedPair(friend.initiator, friend.recipient);
         friend.userA = orderedPair[0];
         friend.userB = orderedPair[1];

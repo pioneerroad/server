@@ -69,8 +69,6 @@ module.exports = function(friendA, friendB) {
     };
 
     this.blockFriend = function(friendA, friendB) {
-        console.log(friendA);
-        console.log(friendB);
         return Friend.update({
             status: 'blocked',
             lastStatusUpdateBy: friendA

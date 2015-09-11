@@ -20,7 +20,7 @@ module.exports = function(app, userSockets, router) {
     /** POST: Initiate a friend request*/
     // 1. Check if relationship already exists in direct or reciprocal form
     // 2. If not, insert request
-    // 3. Trigger notification
+    // 3. Trigger notification/update pending list
     router.post(
         '/user/:uid/friends/create', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function(req, res) {
@@ -47,9 +47,11 @@ module.exports = function(app, userSockets, router) {
                 if (friendRequestData.error) {
                     res.status(400).json(friendRequestData.error);
                 } else {
-                    if (userSockets[friendRequestData.recipient]) {
-                        console.log(userSockets[friendRequestData.recipient]);
-                        io.to(userSockets[friendRequestData.recipient].sessionId).emit('friend request',userProfileData.dataValues);
+                    for (var j = 0; j < userSockets.length; j++) {
+
+                        if (userSockets[j].userId == friendRequestData.recipient) {
+                            io.to(userSockets[j].sessionId).emit('friend request',userProfileData.dataValues);
+                        }
                     }
                     res.status(200).json(friendRequestData);
                 }

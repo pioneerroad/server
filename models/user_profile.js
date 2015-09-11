@@ -35,7 +35,6 @@ module.exports = function(sequelize, DataTypes) {
                     if (data._previousDataValues.currentLocation !== null) {
                         // If location has changed, then log it in dataStore_location
                         if (data.dataValues.currentLocation.lat != data._previousDataValues.currentLocation.lat || data.dataValues.currentLocation.lon != data._previousDataValues.currentLocation.lon) {
-                            console.log(data.dataValues);
                             sequelize.query('INSERT INTO "dataStore_location" (lat, lon, "userAccountId", "createdAt", the_geom) VALUES (:lat, :lon, :uid, now(), ST_SetSRID(ST_MakePoint(:lon, :lat),4326))', {
                                 replacements: {
                                     uid: parseInt(data.dataValues.userAccountId),
@@ -43,7 +42,6 @@ module.exports = function(sequelize, DataTypes) {
                                     lat: data.dataValues.currentLocation.lat},
                                 type: sequelize.QueryTypes.INSERT})
                                 .then(function(response) {
-                                    console.log(response);
                                     sequelize.query('UPDATE "user_profiles" SET the_geom = ST_SetSRID(ST_MakePoint(:lon, :lat),4326) WHERE "userAccountId" = :uid;',{
                                         replacements: {
                                             lat: data.dataValues.currentLocation.lat,
@@ -51,15 +49,12 @@ module.exports = function(sequelize, DataTypes) {
                                             uid: data.dataValues.userAccountId
                                         }})
                                         .then(function(response) {
-                                            console.log(response);
                                             fn(null, data);
                                         })
                                         .error(function(err) {
-                                            console.log(err);
                                             fn(err);
                                         });
                                 }).error(function(err) {
-                                    console.log(err);
                                     fn();
                                 });
                         } else {

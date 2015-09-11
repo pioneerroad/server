@@ -58,7 +58,6 @@ module.exports = function(app, userSockets, s3, router) {
                     }).then(function (data) {
                         res.status(200).json(data);
                     }).catch(function (err) {
-                        console.log(err);
                         res.status(400).json(err);
                     });
             }
@@ -107,7 +106,6 @@ module.exports = function(app, userSockets, s3, router) {
     router.put(
         '/user/:uid/profile/update/current-location', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function (req, res) {
-
                 if (!req.body.lat || !req.body.lon) {
                     res.status(400).json({message: "MISSING_OR_MALFORMED_DATA_LOCATION"})
                 } else {
@@ -148,7 +146,6 @@ module.exports = function(app, userSockets, s3, router) {
                             limit: 1,
                             raw: true
                         }).spread(function (numRows, data) {
-                            console.log(data);
                             return data;
                         });
                     });
@@ -177,7 +174,6 @@ module.exports = function(app, userSockets, s3, router) {
                                         distance: friendsNearby[i].distance,
                                         checkinTime: friendsNearby[i].checkinTime
                                     };
-
                                     io.to(userSockets[j].sessionId).emit('friend nearby', friend); // Send data to connected friends who are nearby
                                 }
                             }

@@ -31,7 +31,12 @@ module.exports = function(app) {
                 try {
                     var decoded = jwt.verify(token, jwtSecret); // Decode the token
                     User.findById(decoded.id, {raw:true}).then(function(user) {
-                        userSockets.push({userId : user.id, sessionId: socket.conn.id});
+                        for (var i = 0; i < userSockets.length; i++) {
+                            if (userSockets[i].userId == user.id) {
+                                userSockets.splice(i, 1);
+                            }
+                        }
+                        userSockets.push({userId: user.id, sessionId: socket.conn.id});
                     }).error(function(err) {
                         throw new Error('AN_ERROR');
                     });
