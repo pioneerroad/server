@@ -26,6 +26,7 @@ app.use(cors({origin: ['http://localhost:3000','http://app.pioneerroad.com.au','
 app.use(passport.initialize());
 require (__dirname + '/controllers/passport') (app, passport);
 app.use(logger('dev')); // Logs calls by Express routes to terminal
+app.use(bodyParser({limit:10000000}));
 app.use(bodyParser.json()); // Use body-parser to extract data from POST
 app.use(bodyParser.urlencoded({ extended: false, limit: 10000000 }));
 /** Multer defaults: upload files to /temp/uploads, max size = 10Mb per file, files are renamed to current datestamp **/
