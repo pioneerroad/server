@@ -5,6 +5,8 @@ var accessHasRelationship = require(__dirname+'/../controllers/access_controller
 var accessPublic = require(__dirname+'/../controllers/access_controllers/accessPublic');
 var accessVerify = require(__dirname+'/../controllers/access_controllers/accessVerify');
 
+var Promise = require('bluebird');
+var models = require(__dirname+'/../models');
 var friendController = require(__dirname+'/../controllers/friendController');
 var photoUploadController = require(__dirname+'/../controllers/photoUploadController');
 var photoCtrl = new photoUploadController();
