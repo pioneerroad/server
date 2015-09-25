@@ -200,7 +200,7 @@ module.exports = function(app, userSockets, s3, router) {
                 }
             };
 
-            photoCtrl.imageUpload(req.body.imageFile, 1, processedImageSizes, 'profile-photo').then(function(data) {
+            photoCtrl.imageUpload(req.body.imageFile, req.params.uid, processedImageSizes, 'profile-photo').then(function(data) {
                 Profile.findOne({
                     where: {userAccountId: req.params.uid}
                 }).then(function(profile) {
@@ -330,8 +330,35 @@ module.exports = function(app, userSockets, s3, router) {
 
         });
 
-        router.post('/temp/photo', function(req, res) {
+        router.put('/temp/photo', function(req, res) {
+                var processedImageSizes = {
+                    "large": {
+                        "width": 200,
+                        "height": 200
+                    },
+                    "medium": {
+                        "width": 100,
+                        "height": 100
+                    },
+                    "small": {
+                        "width": 30,
+                        "height": 30
+                    }
+                };
 
+                photoCtrl.imageUpload(req.body.imageFile, 1, processedImageSizes, 'profile-photo').then(function(data) {
+                    Profile.findOne({
+                        where: {userAccountId: 1}
+                    }).then(function(profile) {
+                        profile.updateAttributes({
+                            profilePhoto: data
+                        }).then(function(newProfileData) {
+                            res.status(200).json({message:"USER_PROFILE_UPDATE_COMPLETE","data":newProfileData});
+                        });
+                    })
+                }).error(function(err) {
+                    console.log(err);
+                });
 
         });
 
