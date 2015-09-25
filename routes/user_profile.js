@@ -239,7 +239,7 @@ module.exports = function(app, userSockets, s3, router) {
                     where: {userAccountId: req.params.uid}
                 }).then(function(profile) {
                     profile.updateAttributes({
-                        profilePhoto: data
+                        profileBackgroundPhoto: data
                     }).then(function(newProfileData) {
                         console.log(newProfileData);
                         res.status(200).json({message:"USER_PROFILE_UPDATE_COMPLETE","data":newProfileData});
