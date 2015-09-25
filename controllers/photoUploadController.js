@@ -19,7 +19,7 @@ module.exports = function(imageData, uid, outputDims) {
 
 
         return Promise.all([originalTempFile, originalImageSize, currentUser]).spread(function (originalTempFileData, originalImageSizeData, currentUserData) {
-            var s3Path = 'profile-photos/'+currentUserData.id+'/'+category+'/';
+            var s3Path = 'user-photos/'+currentUserData.id+'/'+category+'/';
             outputDims.original = {"width":originalImageSizeData.width, "height":originalImageSizeData.height}; // Add original filesize to outputDims
             for (var key in outputDims) {
                 if (outputDims.hasOwnProperty(key)) {
