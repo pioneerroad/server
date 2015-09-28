@@ -10,6 +10,10 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: true
         },
+        bio: {
+            type: DataTypes.TEXT,
+            allowNull: true
+        },
         profilePhoto: {
             type: DataTypes.JSONB,
             allowNull: true

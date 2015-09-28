@@ -264,48 +264,26 @@ module.exports = function(app, userSockets, s3, router) {
                 });
         });
 
-        router.post('/temp/photo/old', function(req, res) {
-            var img = req.body.imageFile;
-
-
-
-            var imageBuffer = decodeBase64Image(img);
-            fs.writeFile(__dirname+'/../temp/uploads/test.jpg', imageBuffer.data, function(err) {
-                console.log('ok');
-            });
-
-        });
-
-        router.put('/temp/photo', function(req, res) {
-                var processedImageSizes = {
-                    "large": {
-                        "width": 200,
-                        "height": 200
-                    },
-                    "medium": {
-                        "width": 100,
-                        "height": 100
-                    },
-                    "small": {
-                        "width": 30,
-                        "height": 30
-                    }
-                };
-
-                photoCtrl.imageUpload(req.body.imageFile, 1, processedImageSizes, 'profile-photo').then(function(data) {
-                    Profile.findOne({
-                        where: {userAccountId: 1}
-                    }).then(function(profile) {
-                        profile.updateAttributes({
-                            profilePhoto: data
-                        }).then(function(newProfileData) {
-                            res.status(200).json({message:"USER_PROFILE_UPDATE_COMPLETE","data":newProfileData});
-                        });
-                    })
-                }).error(function(err) {
-                    console.log(err);
-                });
-
+    router.put('/user/:uid/bio', [jwtAuth, accessAdmin, accessOwner, accessVerify],
+        function(req, res) {
+            var uid = req.params.uid;
+            if (!req.body.bio) {
+                res.status(400).json({message: "MISSING_DATA_BIO"})
+            } else {
+                var bio = {bio: req.body.bio};
+                console.log(bio);
+                Profile.update(bio,
+                    {
+                        where: {userAccountId: uid},
+                        individualHooks: true,
+                        returning: true,
+                        limit: 1
+                    }).then(function (data) {
+                        res.status(200).json(data);
+                    }).catch(function (err) {
+                        res.status(400).json(err);
+                    });
+            }
         });
 
         return router;
