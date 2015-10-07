@@ -39,8 +39,6 @@ db.user_privacy.belongsTo(db.user_account);
 // Associate each entry in friend table with valid users
 db.user_account.hasMany(db.relationship_friends, {foreignKey:'userA'});
 db.user_account.hasMany(db.relationship_friends, {foreignKey:'userB'});
-/*db.relationship_friends.belongsTo(db.user_account, {foreignKey:'userA'});
-db.relationship_friends.belongsTo(db.user_account, {foreignKey:'userB'});*/
 
 // Associate hometowns on the user profile with the dataStore_towns table
 db.user_profile.belongsTo(db.dataSet_towns, {foreignKey: 'homeTownId'});
@@ -50,6 +48,14 @@ db.cache_user_profile.belongsTo(db.user_account);
 
 // Associate the cache_friend_list table with it user account/user profile
 db.cache_friend_list.belongsTo(db.user_account);
+
+/* Set up relationships for message models */
+db.message_threads.belongsTo(db.user_profile, {as:'initUser', foreignKey:'initUserId'});
+db.user_profile.hasMany(db.message_threads, {as:'initUser', foreignKey:'initUserId'});
+db.message_user_threads.belongsTo(db.message_threads, {as:'messageThread', foreignKey:'threadId'});
+db.message_threads.hasMany(db.message_user_threads, {as:'userThread', foreignKey:'threadId'});
+db.message_user_threads.belongsTo(db.user_profile, {as:'userAccount', foreignKey:'userAccountId'});
+db.user_profile.hasMany(db.message_user_threads, {as:'userAccount', foreignKey:'userAccountId'});
 
 db.sequelize = sequelize;
 

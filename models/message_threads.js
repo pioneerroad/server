@@ -1,17 +1,18 @@
 "use strict";
 
 module.exports = function(sequelize, DataTypes) {
-    var Messages = sequelize.define("messages_thread", {
+    var Threads = sequelize.define("message_threads", {
         threadId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             unique: true,
             primaryKey: true,
+            autoIncrement: true,
             comment: "Primary Key"
         },
-        originatorId: {
+        initUserId: {
             type: DataTypes.INTEGER,
-            comment: "UserId of thread originator"
+            comment: "UserId of thread initiator"
         },
         threadContent: {
             type: DataTypes.JSONB,
@@ -21,7 +22,7 @@ module.exports = function(sequelize, DataTypes) {
     },
         {
             freezeTableName: true,
-            tableName: 'messages_thread',
+            tableName: 'message_threads',
             updatedAt: 'lastMessageTime',
             hooks: {
                 afterUpdate: function (user, options, fn) {
@@ -30,5 +31,5 @@ module.exports = function(sequelize, DataTypes) {
         }
     });
 
-    return Messages;
+    return Threads;
 };
