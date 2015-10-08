@@ -11,7 +11,7 @@ var friendController = require(__dirname+'/../controllers/friendController');
 var photoUploadController = require(__dirname+'/../controllers/photoUploadController');
 var photoCtrl = new photoUploadController();
 var friendCtrl = new friendController();
-var rawQueries = require(__dirname+'/../controllers/rawQueries');
+var Queries = require(__dirname+'/../controllers/queries');
 
 module.exports = function(app, userSockets, s3, router) {
     var Profile = app.get('models').user_profile;
@@ -255,9 +255,10 @@ module.exports = function(app, userSockets, s3, router) {
     router.get('/user/:uid/current-location', [jwtAuth, accessAdmin, accessOwner, accessVerify],
         function(req, res) {
             var models = app.get('models');
-            var currentLocation = models.sequelize.query('SELECT towns."location", "user_profiles"."currentLocation"->\'updatedAt\' AS timestamp, towns."tourism_region", towns."state", ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) / 1000 AS distance FROM "dataSet_towns" AS towns, "user_profiles" WHERE ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) < 100000 ORDER BY ST_DISTANCE_SPHERE(towns.geom, (SELECT "user_profiles"."the_geom" FROM "user_profiles" WHERE "user_profiles"."userAccountId" = :uid)) LIMIT 1;', {replacements:{uid:req.params.uid}, type: models.sequelize.QueryTypes.SELECT})
-                .spread(function(response, metadata) {
-                    res.status(200).json(response);
+            var currentLocation = models.sequelize.query(Queries.currentLocation, {replacements:{uid:req.params.uid, distance:100000}, type: models.sequelize.QueryTypes.SELECT})
+                .then(function(data) {
+                    console.log(data);
+                    res.status(200).json(data);
                 })
                 .error(function(err) {
                     res.status(400).json(err);

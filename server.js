@@ -49,7 +49,7 @@ var userRoutes = require('./routes/user_account') (app, passport, router); app.u
 var profileRoutes = require('./routes/user_profile') (app, userSockets, s3, router); app.use(routeRoot, profileRoutes);
 var friendRoutes = require('./routes/friends') (app, userSockets, router); app.use(routeRoot, friendRoutes);
 var privacyRoutes = require('./routes/user_privacy') (app, router); app.use(routeRoot, privacyRoutes);
-var messages = require('./routes/messages') (app, router); app.use(routeRoot, messages);
+var messages = require('./routes/messages') (app, userSockets, router); app.use(routeRoot, messages);
 //var vehicleRoutes = require('./routes/vehicle') (app); app.use(routeRoot, vehicleRoutes);
 
 /** Management and utility routes*/

@@ -12,7 +12,7 @@ var models = require(__dirname+'/../models');
 var queries = require(__dirname+'/../controllers/queries');
 
 
-module.exports = function(app, router) {
+module.exports = function(app, userSockets, router) {
     var MessageThreads = app.get('models').message_threads;
     var UserThreads = app.get('models').message_user_threads;
     var Profile = app.get('models').user_profile;
@@ -85,7 +85,19 @@ module.exports = function(app, router) {
                 return err;
             });
 
-            Promise.all([thread, activeThread]).spread(function(threadData, activeThreadData) {
+            var subscribers = UserThreads.findAll({
+                where: {
+                    threadId: req.params.threadId,
+                    status: 'active'
+                },
+                raw: true
+            }).then(function(data) {
+                return data;
+            }).error(function(err) {
+                return err;
+            });
+
+            Promise.all([thread, activeThread, subscribers]).spread(function(threadData, activeThreadData, subscribersData) {
                 if (activeThreadData === null) {
                     res.status(401).json({error:"NOT_A_THREAD_MEMBER"});
                     return false;
@@ -101,9 +113,11 @@ module.exports = function(app, router) {
                     timestamp: Date.now(),
                     uuid: uuid.v4()
                 };
-                msgContent.push(newMsg);
+                msgContent.push(newMsg); // Append the new message to the existing thread array
 
-                MessageThreads.update(
+                pushMessage(newMsg, userSockets, subscribersData); // Push the new message via active socket.io
+
+                MessageThreads.update( // Update the msg thread with newly appended message.
                     {
                         threadContent: msgContent
                     }, {
@@ -139,24 +153,48 @@ module.exports = function(app, router) {
     /** Need to check user is active on requested thread and update their read status*/
     router.get('/message/user/:uid/thread/:threadId/read-thread',
         function(req, res) {
-            MessageThreads.findAll({
-                where: {threadId:req.params.threadId},
-                attributes: ['threadContent'],
-                include: [{model:UserThreads, as:'userThread', where:{userAccountId: req.params.uid, $and: {status:'active'}}}]}
-            ).then(function(data) {
-                    var now = Date().now;
-                    UserThreads.update(
-                        {viewDate: now},
-                        {where: {userAccountId: req.params.uid, $and: {threadId: req.params.threadId}}
-                        }).then(function(data) {
-                            res.status(200).json({message:'Updated '+data+' row'});
-                        }).error(function(err) {
-                            console.log(err);
-                        });
+
+            var data = {
+                viewDate: Date.now()
+            };
+
+           var messages = MessageThreads.findOne({
+               where: {threadId: req.params.threadId},
+               attributes: ['threadContent'],
+               raw: true
+           }).then(function(data) {
+                    return data;
                 }).error(function(err) {
                     return(data);
                 });
+
+            var updateUser = UserThreads.update(
+                {
+                    viewDate: Date.now()
+                },{
+                    where: {
+                        userAccountId: req.params.uid,
+                        $and: {threadId: req.params.threadId}}
+                }).then(function(data) {
+                    return data;
+                }).error(function(err) {
+                    return err;
+                });
+
+            Promise.all([messages, updateUser]).spread(function(messageData, updateUser) {
+                res.status(200).json(messageData);
+            });
     });
 
     return router;
 };
+
+function pushMessage(msg, userSockets, subscribers) {
+    for (var i = 0; i < subscribers.length; i++) { // Get all the active subscribers to this thread
+        for (var j = 0; j < userSockets.length; j++) { // Get all active sockets
+            if (userSockets[j].userId == subscribers[i].userAccountId) { // If there's an active socket for a thread subscriber
+                io.to(userSockets[j].sessionId).emit('new message', msg); // Emit the new message
+            }
+        }
+    }
+}
