@@ -11,7 +11,6 @@ var uuid = require('uuid');
 var models = require(__dirname+'/../models');
 var queries = require(__dirname+'/../controllers/queries');
 
-
 module.exports = function(app, userSockets, router) {
     var MessageThreads = app.get('models').message_threads;
     var UserThreads = app.get('models').message_user_threads;
@@ -115,7 +114,7 @@ module.exports = function(app, userSockets, router) {
                 };
                 msgContent.push(newMsg); // Append the new message to the existing thread array
 
-                pushMessage(newMsg, userSockets, subscribersData); // Push the new message via active socket.io
+                pushMessage(newMsg, userSockets, io, subscribersData); // Push the new message via active socket.io
 
                 MessageThreads.update( // Update the msg thread with newly appended message.
                     {
@@ -189,7 +188,7 @@ module.exports = function(app, userSockets, router) {
     return router;
 };
 
-function pushMessage(msg, userSockets, subscribers) {
+function pushMessage(msg, userSockets, io, subscribers) {
     for (var i = 0; i < subscribers.length; i++) { // Get all the active subscribers to this thread
         for (var j = 0; j < userSockets.length; j++) { // Get all active sockets
             if (userSockets[j].userId == subscribers[i].userAccountId) { // If there's an active socket for a thread subscriber
