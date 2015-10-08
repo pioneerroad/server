@@ -113,7 +113,7 @@ module.exports = function(app, userSockets, s3, router) {
                     };
 
                     // Find the nearest town to the checked in user
-                    var nearestTown = models.sequelize.query(rawQueries.nearestTown, {
+                    var nearestTown = models.sequelize.query(Queries.nearestTown, {
                         replacements: {
                             lon: req.body.lon,
                             lat: req.body.lat
@@ -257,7 +257,6 @@ module.exports = function(app, userSockets, s3, router) {
             var models = app.get('models');
             var currentLocation = models.sequelize.query(Queries.currentLocation, {replacements:{uid:req.params.uid, distance:100000}, type: models.sequelize.QueryTypes.SELECT})
                 .then(function(data) {
-                    console.log(data);
                     res.status(200).json(data);
                 })
                 .error(function(err) {
