@@ -185,6 +185,20 @@ module.exports = function(app, userSockets, router) {
             });
     });
 
+    router.put('/message/user/:uid/thread/:threadId/unsubscribe', function(req, res) {
+        UserThreads.update(
+            {status:'inactive'},
+            {where: {
+                userAccountId: req.params.uid,
+                $and: {threadId: req.params.threadId}
+            }
+        }).then(function(data) {
+            res.status(200).json({message:'Updated '+data+' rows'});
+        }).error(function(err) {
+            res.status(400).json({error:err})
+        })
+    })
+
     return router;
 };
 
