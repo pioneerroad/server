@@ -127,7 +127,7 @@ module.exports = function(app, userSockets, router) {
                         returning: true,
                         limit: 1
                     }).spread(function(metadata, data) {
-                        res.status(200).json(data);
+                        res.status(200).json(newMsg);
                     }).catch(function(err) {
                         res.status(400).json({error:'Message sending failed'});
                     });
