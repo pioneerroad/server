@@ -101,7 +101,6 @@ module.exports = function(app, userSockets, router) {
                     res.status(401).json({error:"NOT_A_THREAD_MEMBER"});
                     return false;
                 }
-                console.log(threadData);
                 var msgContent = threadData.threadContent;
                 var newMsg = {
                     userId: req.params.uid,
@@ -114,6 +113,7 @@ module.exports = function(app, userSockets, router) {
                     uuid: uuid.v4(),
                     threadId: threadData.threadId
                 };
+                msgContent.push(newMsg); // Append the new message to the existing thread array
 
                 pushMessage(newMsg, userSockets, io, subscribersData); // Push the new message via active socket.io
 
