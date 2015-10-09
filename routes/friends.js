@@ -9,7 +9,7 @@ var accessVerify = require(__dirname+'/../controllers/access_controllers/accessV
 
 var friendController = require(__dirname+'/../controllers/friendController');
 var friendCtrl = new friendController();
-var rawSQL = require(__dirname+'/../controllers/rawQueries');
+var Queries = require(__dirname+'/../controllers/queries');
 
 module.exports = function(app, userSockets, router) {
     var io = app.io;
@@ -160,6 +160,27 @@ module.exports = function(app, userSockets, router) {
                 res.json(data);
             })
         });
+
+
+    router.get(
+        '/friend/search/user/:uid/:input', function (req, res) {
+            var models = app.get('models');
+            models.sequelize.query(Queries.searchActiveFriends,
+                {
+                    replacements:
+                        {
+                            uid: req.params.uid,
+                            string: req.params.input
+                        },
+                    type: models.sequelize.QueryTypes.SELECT
+                })
+                .then(function(data) {
+                    res.status(200).json(data);
+                })
+                .error(function(err) {
+                    res.status(400).json(err);
+                })
+            });
 
     return router;
 
