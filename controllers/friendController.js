@@ -2,7 +2,7 @@ var models = require(__dirname+'/../models');
 var Friend = models.relationship_friends;
 var Profile = models.user_profile;
 var User = models.user_account;
-var rawSQL = require(__dirname+'/rawQueries');
+var Query = require(__dirname+'/queries');
 
 module.exports = function(friendA, friendB) {
 
@@ -59,7 +59,7 @@ module.exports = function(friendA, friendB) {
     }
 
     this.pendingFriendList = function(uid) {
-        return models.sequelize.query(rawSQL.pendingFriendRequests, {replacements: {uid: uid}, raw:true})
+        return models.sequelize.query(Query.pendingFriendRequests, {replacements: {uid: uid}, raw:true})
             .spread(function(results, metadata) {
                 return results;
             })
@@ -105,24 +105,18 @@ module.exports = function(friendA, friendB) {
         });
     }
 
-    this.findFriend = function(username) {
-        return User.findOne({
-            where: {
-                username : username
-            }, attributes: ['id']}
-        ).then(function(data) {
-            if (data) {
-                return data;
-            } else {
-                return {error: 'NO_MATCHING_USER'}
-            }
-        }).error(function(err) {
-            return err;
-        })
+    this.findFriend = function(string) {
+        return models.sequelize.query(Query.memberFinder, {replacements:{string:string}})
+            .spread(function(results, metadata) {
+                return results;
+            })
+            .error(function(err) {
+                return err;
+            })
     }
 
     this.listActiveFriends = function(uid) {
-        return models.sequelize.query(rawSQL.activeFriends, {replacements: {uid: uid}})
+        return models.sequelize.query(Query.activeFriends, {replacements: {uid: uid}})
             .spread(function(results, metadata) {
                 return results;
             })
@@ -132,7 +126,7 @@ module.exports = function(friendA, friendB) {
     }
 
     this.friendsNearby = function(uid) {
-        return models.sequelize.query(rawSQL.friendsNearby, {replacements: {uid: uid, distance: 50}})
+        return models.sequelize.query(Query.friendsNearby, {replacements: {uid: uid, distance: 50}})
             .spread(function(results, metadata) {
                 return results;
             })
@@ -140,5 +134,4 @@ module.exports = function(friendA, friendB) {
                 return err;
             });
     }
-
 }

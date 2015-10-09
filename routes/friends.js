@@ -151,19 +151,20 @@ module.exports = function(app, userSockets, router) {
     );
 
     /** Find a friend by username/email ID or phone number **/
-    router.post(
-        '/user/:uid/friends/find', [jwtAuth, accessPublic, accessVerify], function(req, res) {
-            if (!req.body.username) {
-                res.status(400).json({error:'MALFORMED_REQUEST'});
-            }
-            friendCtrl.findFriend(req.body.username).then(function(data) {
-                res.json(data);
-            })
+    router.get(
+        '/user/:uid/friends/:string', [jwtAuth, accessPublic, accessVerify], function(req, res) {
+            friendCtrl.findFriend(req.params.string)
+                .then(function(data) {
+                    res.status(200).json(data);
+                })
+                .error(function(err) {
+                    res.status(400).json(err);
+                })
         });
 
 
     router.get(
-        '/friend/search/user/:uid/:input', function (req, res) {
+        '/user/:uid/friend-query/:input', function (req, res) {
             var models = app.get('models');
             models.sequelize.query(Queries.searchActiveFriends,
                 {
