@@ -114,7 +114,6 @@ module.exports = function(app, userSockets, router) {
                     uuid: uuid.v4(),
                     threadId: threadData.threadId
                 };
-                msgContent.push(newMsg); // Append the new message to the existing thread array
 
                 pushMessage(newMsg, userSockets, io, subscribersData); // Push the new message via active socket.io
 
