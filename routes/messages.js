@@ -61,6 +61,7 @@ module.exports = function(app, userSockets, router) {
         });
 
         Promise.all([message, activeSubscribers, activeThread]).spread(function(messageData, activeSubscribersData, activeThreadData) {
+            console.log(activeThreadData);
             if (activeThreadData === null) {
                 res.status(401).json({error:"NOT_A_THREAD_MEMBER"});
                 return false;
@@ -83,6 +84,7 @@ module.exports = function(app, userSockets, router) {
         }).then(function(data) {
             var values = data.dataValues;
             var recipients = JSON.parse(req.body.recipients);
+            recipients.push(req.params.uid);
             for (var i = 0; i < recipients.length; i++) {
                 var recipient = recipients[i];
                 UserThreads.create({
