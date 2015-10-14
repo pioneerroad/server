@@ -103,6 +103,16 @@ module.exports = function(app, userSockets, router) {
         });
     });
 
+    router.get('/messages/user/:uid/active-threads', function(req, res) {
+        models.sequelize.query(queries.listActiveThreads, {replacements: {uid: req.params.uid}})
+            .spread(function(data, metadata) {
+               res.status(200).json(data);
+            })
+            .error(function(err) {
+                res.status(400).json(err);
+            });
+    });
+
     return router;
 };
 
