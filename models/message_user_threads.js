@@ -9,11 +9,11 @@ module.exports = function(sequelize, DataTypes) {
       unique: true,
       autoIncrement: true
     },
-    userAccountId: {
+    threadId: {
       type: DataTypes.INTEGER,
       unique: 'userThread'
     },
-    threadId: {
+    userAccountId: {
       type: DataTypes.INTEGER,
       unique: 'userThread'
     },

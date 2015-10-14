@@ -12,23 +12,11 @@ module.exports = function(sequelize, DataTypes) {
         },
         initUserId: {
             type: DataTypes.INTEGER,
-            comment: "UserId of thread initiator"
-        },
-        threadContent: {
-            type: DataTypes.JSONB,
-            allowNull: false,
-            comment: "Holds all the data for messages in the thread"
+            comment: "userAccountId of thread initiator"
         }
     },
         {
-            freezeTableName: true,
-            tableName: 'message_threads',
-            updatedAt: 'lastMessageTime',
-            hooks: {
-                afterUpdate: function (user, options, fn) {
-
-            }
-        }
+            tableName: 'message_threads'
     });
 
     return Threads;

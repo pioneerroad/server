@@ -51,11 +51,12 @@ db.cache_friend_list.belongsTo(db.user_account);
 
 /* Set up relationships for message models */
 db.message_threads.belongsTo(db.user_profile, {as:'initUser', foreignKey:'initUserId'});
-db.user_profile.hasMany(db.message_threads, {as:'initUser', foreignKey:'initUserId'});
 db.message_user_threads.belongsTo(db.message_threads, {as:'messageThread', foreignKey:'threadId'});
 db.message_threads.hasMany(db.message_user_threads, {as:'userThread', foreignKey:'threadId'});
 db.message_user_threads.belongsTo(db.user_profile, {as:'userAccount', foreignKey:'userAccountId'});
 db.user_profile.hasMany(db.message_user_threads, {as:'userAccount', foreignKey:'userAccountId'});
+db.messages.belongsTo(db.message_threads, {as:'messageThread', foreignKey:'threadId'});
+db.message_threads.hasMany(db.messages, {as:'messages', foreignKey:'threadId'});
 
 db.sequelize = sequelize;
 
