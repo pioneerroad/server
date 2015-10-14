@@ -24,7 +24,7 @@ LEFT OUTER JOIN LATERAL (
 		string_agg(up2."nickName", ', ') as subscriber_list
 	FROM "message_user_threads" mut2
 	LEFT JOIN "user_profiles" up2 ON up2."userAccountId" = mut2."userAccountId"
-	WHERE mt."threadId" = mut2."threadId" AND mut2."status" = 'active' AND mut2."userAccountId" != 6
+	WHERE mt."threadId" = mut2."threadId" AND mut2."status" = 'active' AND mut2."userAccountId" != :uid
 ) subscribers ON true
-WHERE mut."userAccountId" = 6
+WHERE mut."userAccountId" = :uid
 AND mut."status" = 'active';
