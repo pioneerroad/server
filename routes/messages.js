@@ -13,191 +13,94 @@ var queries = require(__dirname+'/../controllers/queries');
 
 module.exports = function(app, userSockets, router) {
     var MessageThreads = app.get('models').message_threads;
+    var Messages = app.get('models').messages;
     var UserThreads = app.get('models').message_user_threads;
     var Profile = app.get('models').user_profile;
 
     var io = app.io;
 
-    /** Create a new message thread */
-    /** Need to pass in an array of users who participate in this thread */
-    router.post('/message/user/:uid/new-thread', function(req, res) {
-        if (!req.body.recipients || !req.body.content)
-            res.status(400).json({error:"MALFORMED_REQUEST"});
-        var userArray = JSON.parse(req.body.recipients);
-        userArray.push(req.params.uid); // Add originator's id to the thread
-        var msgContent = req.body.content;
-        var msg = { // Build msg object
-            initUserId: req.params.uid,
-            threadContent: [{
-                userId: req.params.uid,
-                message: msgContent,
-                timestamp: Date.now(),
+    router.post('/messages/user/:uid/thread/:threadId/new-message', function(req, res) {
+        if (!req.body.message)
+            res.status(400).json({error:'MALFORMED_REQUEST'});
+        var data = {
+                threadId: req.params.threadId,
+                senderId: req.params.uid,
+                content: req.body.message,
                 uuid: uuid.v4(),
-                location: {
-                    lat: req.body.lat,
-                    lon: req.body.lon
-                }
-            }]
+                createdAt: Date.now(),
+                updatedAt: Date.now()
         };
+        var message = Messages.create(data).then(function(data) {
+                return data;
+            }).error(function(err) {
+                return err;
+            });
 
-        MessageThreads.create(msg).then(function(data, metadata) {
-            for (var i=0; i < userArray.length; i++) { // Iterate user array and save each one with the new thread ID
-                var msgUserThread = {
-                    userAccountId: userArray[i],
-                    threadId: data.threadId
-                }
-                var userThread = UserThreads.create(msgUserThread).then(function(data, metadata) {
-                    return data;
-                }).error(function(err) {
-                    return err;
-                });
-            }
-            res.status(200).json({message:data});
+        var activeThread = UserThreads.find({
+            where: {
+                userAccountId: req.params.uid,
+                threadId: req.params.threadId
+            },
+            raw: true
+        }).then(function(data) {
+            return data;
         }).error(function(err) {
-            res.status(400).json({error:err});
+            return err;
         });
-    });
 
-    /** Append a message to an existing thread -- get existing thread, then add new data to end and send back.*/
-    /** Need to support transactions/table locking for this */
-    /** Need to check that the user posting the message is included on the thread */
-    router.put('/message/user/:uid/thread/:threadId/new-message',
-        function(req, res) {
-            if (!req.body.content)
-                res.status(400).json({error:"MALFORMED_REQUEST"});
-
-            var thread = MessageThreads.findById(req.params.threadId, {raw:true}).then(function(data) {
-                return data;
-            }).error(function(err) {
-                return err;
-            });
-
-            var activeThread = UserThreads.find({
-                where: {
-                    userAccountId: req.params.uid,
-                    threadId: req.params.threadId
-                },
-                raw: true
-            }).then(function(data) {
-                return data;
-            }).error(function(err) {
-                return err;
-            });
-
-            var subscribers = UserThreads.findAll({
+        var activeSubscribers = UserThreads.findAll({
                 where: {
                     threadId: req.params.threadId,
                     status: 'active'
                 },
-                raw: true
-            }).then(function(data) {
-                return data;
-            }).error(function(err) {
-                return err;
-            });
-
-            Promise.all([thread, activeThread, subscribers]).spread(function(threadData, activeThreadData, subscribersData) {
-                if (activeThreadData === null) {
-                    res.status(401).json({error:"NOT_A_THREAD_MEMBER"});
-                    return false;
-                }
-                var msgContent = threadData.threadContent;
-                var newMsg = {
-                    userId: req.params.uid,
-                    message: req.body.content,
-                    location: {
-                        lat: '',
-                        lon: ''
-                    },
-                    timestamp: Date.now(),
-                    uuid: uuid.v4(),
-                    threadId: threadData.threadId
-                };
-                msgContent.push(newMsg); // Append the new message to the existing thread array
-
-                pushMessage(newMsg, userSockets, io, subscribersData); // Push the new message via active socket.io
-
-                MessageThreads.update( // Update the msg thread with newly appended message.
-                    {
-                        threadContent: msgContent
-                    }, {
-                        where: {
-                            threadId: req.params.threadId
-                        },
-                        returning: true,
-                        limit: 1
-                    }).spread(function(metadata, data) {
-                        res.status(200).json(newMsg);
-                    }).catch(function(err) {
-                        res.status(400).json({error:'Message sending failed'});
-                    });
-            });
-    });
-
-    /** Get list of active threads for current user */
-    /** Need to compare thread view date (for this user) with thread last message date to see if there are unread messages for this user*/
-
-    router.get('/message/user/:uid/active-threads', function(req, res) {
-        models.sequelize.query(queries.listActiveThreads, {
-            replacements: {
-                uid: req.params.uid
-            }})
-            .spread(function(data, metadata) {
-                res.json(data);
-            })
-            .error(function(error) {
-                res.json(error);
-            })
-    });
-
-    /** Need to check user is active on requested thread and update their read status*/
-    router.get('/message/user/:uid/thread/:threadId/read-thread',
-        function(req, res) {
-
-            var data = {
-                viewDate: Date.now()
-            };
-
-           var messages = MessageThreads.findOne({
-               where: {threadId: req.params.threadId},
-               attributes: ['threadContent'],
-               raw: true
-           }).then(function(data) {
-                    return data;
-                }).error(function(err) {
-                    return(data);
-                });
-
-            var updateUser = UserThreads.update(
-                {
-                    viewDate: Date.now()
-                },{
-                    where: {
-                        userAccountId: req.params.uid,
-                        $and: {threadId: req.params.threadId}}
-                }).then(function(data) {
-                    return data;
-                }).error(function(err) {
-                    return err;
-                });
-
-            Promise.all([messages, updateUser]).spread(function(messageData, updateUser) {
-                res.status(200).json(messageData);
-            });
-    });
-
-    router.put('/message/user/:uid/thread/:threadId/unsubscribe', function(req, res) {
-        UserThreads.update(
-            {status:'inactive'},
-            {where: {
-                userAccountId: req.params.uid,
-                $and: {threadId: req.params.threadId}
-            }
+                raw:true
         }).then(function(data) {
-            res.status(200).json({message:'Updated '+data+' rows'});
+            return data;
         }).error(function(err) {
-            res.status(400).json({error:err})
-        })
+            return err;
+        });
+
+        Promise.all([message, activeSubscribers, activeThread]).spread(function(messageData, activeSubscribersData, activeThreadData) {
+            if (activeThreadData === null) {
+                res.status(401).json({error:"NOT_A_THREAD_MEMBER"});
+                return false;
+            }
+            pushMessage(message, userSockets, io, activeSubscribersData);
+            res.status(200).json({message:messageData});
+        });
+    });
+
+    router.post('/messages/user/:uid/create-thread', function(req, res) {
+        if (!req.body.recipients) {
+            res.status(400).json({message:'MALFORMED_REQUEST'});
+        }
+        var data = {
+            initUserId: req.params.uid
+        };
+
+        MessageThreads.create({
+            initUserId: req.params.uid
+        }).then(function(data) {
+            var values = data.dataValues;
+            var recipients = JSON.parse(req.body.recipients);
+            for (var i = 0; i < recipients.length; i++) {
+                var recipient = recipients[i];
+                UserThreads.create({
+                    threadId: values.threadId,
+                    userAccountId: recipient,
+                    status: 'active'
+                })
+                    .then(function(data) {
+                        // Do something
+                    })
+                    .error(function(err) {
+                        res.status(400).json({error:err});
+                    })
+            }
+            res.status(200).json({message:data});
+        }).error(function(err) {
+            res.status(400).json(err);
+        });
     });
 
     return router;

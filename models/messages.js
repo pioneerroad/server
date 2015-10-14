@@ -16,7 +16,7 @@ module.exports = function(sequelize, DataTypes) {
         },
         senderId: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: false
         },
         content: {
             type: DataTypes.TEXT,
