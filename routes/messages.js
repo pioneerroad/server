@@ -97,7 +97,7 @@ module.exports = function(app, userSockets, router) {
                         res.status(400).json({error:err});
                     })
             }
-            res.status(200).json({message:data});
+            res.status(200).json(data);
         }).error(function(err) {
             res.status(400).json(err);
         });
