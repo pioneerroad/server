@@ -115,6 +115,49 @@ module.exports = function(app, userSockets, router) {
             });
     });
 
+    router.get('/messages/user/:uid/thread/:threadId/view-thread', function(req, res) {
+        var messages = Messages.findAll({
+                where: {
+                    threadId: req.params.threadId
+                },
+                include: [
+                    {
+                        model:Profile,
+                        as:'sender',
+                        attributes:['profilePhoto','nickName']
+                    }
+                ]
+        }).then(function(data) {
+            return data;
+        }).error(function(err) {
+            return err;
+        });
+
+        var validUserThread = UserThreads.findOne(
+            {
+                where: {
+                    $and: {
+                        threadId: req.params.threadId,
+                        userAccountId: req.params.uid
+                    }
+                }
+        }).then(function(data) {
+            return data;
+        }).error(function(err) {
+            return err;
+        });
+
+        Promise.all([validUserThread, messages]).spread(function(userThreadData, messagesData) {
+            if (userThreadData !== null) {
+                res.status(200).json(messagesData);
+            } else {
+                res.status(400).json({error:"NOT_A_MEMBER_OF_THREAD"})
+            }
+        });
+
+
+    });
+
     return router;
 };
 
