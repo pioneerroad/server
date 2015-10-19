@@ -3,9 +3,6 @@ npm-debug.log
 .idea/
 .DS_Store
 notes/
-config/config.json
-config/serverConfig.js
-data/states.sql
 temp/
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
