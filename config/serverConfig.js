@@ -8,8 +8,8 @@ var settings = {
         cert: fs.readFileSync(__dirname+'/SSLCertificate/cert.pem')
     },
     ports: {
-        SSLPort: 443,
-        noSSLPort: 80
+        SSLPort: 8090,
+        noSSLPort: 8081
     }
 }
 
