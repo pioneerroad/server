@@ -4,7 +4,7 @@ var router  = express.Router();
 var app = express();
 var http = require('http');
 var https = require('https');
-var server = http.Server(app);
+var server = https.Server(app);
 var io = require('socket.io')(server); app.io = io; // Add io to app, to make it available to express routes.
 var cors = require('cors');
 var bodyParser = require('body-parser');
