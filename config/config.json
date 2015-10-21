@@ -3,7 +3,7 @@
     "username": "pioneer",
     "password": "P10n33rR0ad",
     "database": "app",
-    "host": "aa1h9lv53g86e6x.carkrjtaa7no.ap-southeast-2.rds.amazonaws.com",
+    "host": "aazqwm5tubidn1.carkrjtaa7no.ap-southeast-2.rds.amazonaws.com",
     "dialect": "postgresql"
   },
   "test": {
