@@ -120,6 +120,7 @@ module.exports = function(app, userSockets, router) {
                 where: {
                     threadId: req.params.threadId
                 },
+                order: [{createdAt:'ASC'}],
                 include: [
                     {
                         model:Profile,
