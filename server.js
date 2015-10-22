@@ -79,7 +79,6 @@ var ports = serverConfig.ports;
  * */
 models.sequelize.sync().then(function () {
     //var modelSync = require(__dirname + '/migrations/sync_models') (models); // Apply non-sequelizeable elements to tables
-
     server.listen(ports.noSSLPort, function() {
         console.log('Listening on http://localhost:'+ports.noSSLPort);
     });
