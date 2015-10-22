@@ -20,6 +20,12 @@ module.exports = function(app, router) {
         }
     );
 
+    router.get(
+        '/health-check', function(req, res) {
+            res.status(200).json({message:"System Health Check Passed"});
+        }
+    );
+
     return router;
 }
 

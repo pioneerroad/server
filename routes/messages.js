@@ -61,6 +61,7 @@ module.exports = function(app, userSockets, router) {
         });
 
         Promise.all([message, activeSubscribers, activeThread]).spread(function(messageData, activeSubscribersData, activeThreadData) {
+            console.log(activeThreadData);
             if (activeThreadData === null) {
                 res.status(401).json({error:"NOT_A_THREAD_MEMBER"});
                 return false;
@@ -83,6 +84,7 @@ module.exports = function(app, userSockets, router) {
         }).then(function(data) {
             var values = data.dataValues;
             var recipients = JSON.parse(req.body.recipients);
+            recipients.push(req.params.uid);
             for (var i = 0; i < recipients.length; i++) {
                 var recipient = recipients[i];
                 UserThreads.create({
@@ -97,10 +99,73 @@ module.exports = function(app, userSockets, router) {
                         res.status(400).json({error:err});
                     })
             }
-            res.status(200).json({message:data});
+            res.status(200).json(data);
         }).error(function(err) {
             res.status(400).json(err);
         });
+    });
+
+    router.get('/messages/user/:uid/active-threads', function(req, res) {
+        models.sequelize.query(queries.listActiveThreads, {replacements: {uid: req.params.uid}})
+            .spread(function(data, metadata) {
+               res.status(200).json(data);
+            })
+            .error(function(err) {
+                res.status(400).json(err);
+            });
+    });
+
+    router.get('/messages/user/:uid/thread/:threadId/view-thread', function(req, res) {
+        var messages = Messages.findAll({
+                where: {
+                    threadId: req.params.threadId
+                },
+                include: [
+                    {
+                        model:Profile,
+                        as:'sender',
+                        attributes:['profilePhoto','nickName']
+                    }
+                ],
+                order: [['createdAt','ASC']]
+        }).then(function(data) {
+            return data;
+        }).error(function(err) {
+            return err;
+        });
+
+        var validUserThread = UserThreads.findOne(
+            {
+                where: {
+                    $and: {
+                        threadId: req.params.threadId,
+                        userAccountId: req.params.uid
+                    }
+                }
+        }).then(function(data) {
+            return data;
+        }).error(function(err) {
+            return err;
+        });
+
+        Promise.all([validUserThread, messages]).spread(function(userThreadData, messagesData) {
+            if (userThreadData !== null) {
+                UserThreads.update({viewDate:Date.now()},{
+                    where: {
+                        userAccountId: req.params.uid,
+                        threadId: req.params.threadId
+                    }
+                }).then(function(data) {
+                    res.status(200).json(messagesData);
+                }).error(function(error) {
+                    res.status(400).json(error);
+                });
+            } else {
+                res.status(400).json({error:"NOT_A_MEMBER_OF_THREAD"})
+            }
+        });
+
+
     });
 
     return router;

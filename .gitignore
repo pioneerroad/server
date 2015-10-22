@@ -5,5 +5,10 @@ npm-debug.log
 notes/
 config/config.json
 config/serverConfig.js
+config/SSLCertificate/
 data/states.sql
 temp/
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
