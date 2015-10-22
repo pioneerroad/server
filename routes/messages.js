@@ -120,14 +120,14 @@ module.exports = function(app, userSockets, router) {
                 where: {
                     threadId: req.params.threadId
                 },
-                order: [{createdAt:'ASC'}],
                 include: [
                     {
                         model:Profile,
                         as:'sender',
                         attributes:['profilePhoto','nickName']
                     }
-                ]
+                ],
+                order: [['createdAt','ASC']]
         }).then(function(data) {
             return data;
         }).error(function(err) {
@@ -149,12 +149,12 @@ module.exports = function(app, userSockets, router) {
         });
 
         Promise.all([validUserThread, messages]).spread(function(userThreadData, messagesData) {
-            if (userThreadData !== null) {
+            //if (userThreadData !== null) {
                 /** @todo: update ViewDate on userThreads */
                 res.status(200).json(messagesData);
-            } else {
-                res.status(400).json({error:"NOT_A_MEMBER_OF_THREAD"})
-            }
+            //} else {
+                //res.status(400).json({error:"NOT_A_MEMBER_OF_THREAD"})
+            //}
         });
 
 
