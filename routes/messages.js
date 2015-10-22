@@ -149,12 +149,20 @@ module.exports = function(app, userSockets, router) {
         });
 
         Promise.all([validUserThread, messages]).spread(function(userThreadData, messagesData) {
-            //if (userThreadData !== null) {
-                /** @todo: update ViewDate on userThreads */
-                res.status(200).json(messagesData);
-            //} else {
-                //res.status(400).json({error:"NOT_A_MEMBER_OF_THREAD"})
-            //}
+            if (userThreadData !== null) {
+                UserThreads.update({viewDate:Date.now()},{
+                    where: {
+                        userAccountId: req.params.uid,
+                        threadId: req.params.threadId
+                    }
+                }).then(function(data) {
+                    res.status(200).json(messagesData);
+                }).error(function(error) {
+                    res.status(400).json(error);
+                });
+            } else {
+                res.status(400).json({error:"NOT_A_MEMBER_OF_THREAD"})
+            }
         });
 
 
