@@ -6,7 +6,7 @@ var http = require('http');
 var https = require('https');
 var serverConfig = require(__dirname + '/config/serverConfig');
 var options = serverConfig.options;
-var server = https.createServer(options, app);
+var server = http.createServer(app);
 var io = require('socket.io')(server); app.io = io; // Add io to app, to make it available to express routes.
 var cors = require('cors');
 var bodyParser = require('body-parser');
@@ -80,7 +80,7 @@ var ports = serverConfig.ports;
 models.sequelize.sync().then(function () {
     //var modelSync = require(__dirname + '/migrations/sync_models') (models); // Apply non-sequelizeable elements to tables
 
-    server.listen(ports.SSLPort, function() {
-        console.log('Listening on http://localhost:'+ports.SSLPort);
+    server.listen(ports.noSSLPort, function() {
+        console.log('Listening on http://localhost:'+ports.noSSLPort);
     });
 });
