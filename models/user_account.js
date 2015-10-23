@@ -1,8 +1,7 @@
 "use strict";
 
-
-
 var bcrypt = require('bcryptjs');
+var SMTPTransporter = require(__dirname+'/../config/nodemailerConfig');
 
 module.exports = function(sequelize, DataTypes) {
   var User = sequelize.define("user_account", {
@@ -49,6 +48,9 @@ module.exports = function(sequelize, DataTypes) {
           onDelete: 'cascade', hooks: true
         });
         User.hasOne(models.user_privacy, {
+          onDelete: 'cascade', hooks: true
+        });
+        User.hasOne(models.user_email_validation, {
           onDelete: 'cascade', hooks: true
         });
       }
@@ -106,9 +108,32 @@ module.exports = function(sequelize, DataTypes) {
         }).error(function(err) {
           return fn(err);
         });
+        this.associations.user_email_validation.target.create({
+          userAccountId: user.id,
+          keyExpires: setDate(7),
+          validationKey: validationKey('email', user.username)
+        }).then(function(data) {
+          SMTPTransporter.sendMail({
+            from:'no-reply@pioneerroad.com.au',
+            to: user.username,
+            subject: 'Welcome to Pioneer Road! Please verify your email address',
+            text: 'https://pioneerroad.com.au:8090/api/v1/user/'+user.id+'/confirm/email/'+encodeURIComponent(data.validationKey)
+          });
+        });
       }
     }
   });
 
   return User;
 };
+
+function setDate(numDays) {
+  var d = new Date();
+  d.setDate(d.getDate()+numDays);
+  return d;
+}
+
+function validationKey(keyType, data) {
+  var salt = bcrypt.genSaltSync(5);
+  return bcrypt.hashSync(data, salt);
+}
