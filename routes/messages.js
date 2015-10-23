@@ -65,7 +65,7 @@ module.exports = function(app, userSockets, router) {
                 res.status(401).json({error:"NOT_A_THREAD_MEMBER"});
                 return false;
             }
-            var nickName = Profile.findById(messageData.senderId,{raw:true,attributes:['nickName']}).then(function(data) {
+            var nickName = Profile.findById(messageData.senderId,{raw:true,attributes:['nickName','profilePhoto']}).then(function(data) {
                 var message = messageData.dataValues;
                 message.senderName = data.nickName;
                 pushMessage(message, userSockets, io, activeSubscribersData);
