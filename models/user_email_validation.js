@@ -3,20 +3,16 @@
 var bcrypt = require('bcryptjs');
 
 module.exports = function(sequelize, DataTypes) {
-    var UserContactValidation = sequelize.define("user_contact_validation", {
-        validationId: {
+    var UserEmailValidation = sequelize.define("user_email_validation", {
+        emailValidationId: {
             type:DataTypes.INTEGER,
             allowNull: false,
             primaryKey: true,
-            unique: true
+            unique: true,
+            autoIncrement:true
         },
         userAccountId: {
             type:DataTypes.INTEGER,
-            allowNull: false
-        },
-        validationType: {
-            type:DataTypes.ENUM,
-            values:['mobileNumber','emailAddress'],
             allowNull: false
         },
         validationKey: {
@@ -31,8 +27,13 @@ module.exports = function(sequelize, DataTypes) {
         keyExpires: {
             type: DataTypes.DATE,
             allowNull: false
+        },
+        validationFails: {
+            type: DataTypes.INTEGER,
+            allowNull: true
         }
     },{
+        freezeTableName: true,
         hooks: {
             beforeCreate: function(accountValidation, options, fn){
                 console.log(accountValidation);
@@ -41,7 +42,7 @@ module.exports = function(sequelize, DataTypes) {
         }
     });
 
-    return UserContactValidation;
+    return UserEmailValidation;
 };
 
 function validationKey(keyType, keyLength) {

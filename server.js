@@ -14,6 +14,7 @@ var passport = require('passport');
 var logger = require('morgan');
 var multer = require('multer');
 var AWS = require('aws-sdk'); AWS.config.update({region: 'ap-southeast-2'}); var s3 = new AWS.S3(); // Load AWS SDK and set default region
+var SMTPTransporter = require(__dirname+'/config/nodemailerConfig');
 
 /**
  *  Load models
@@ -47,7 +48,7 @@ io.on('welcome',function(data) {
  * */
 var routeRoot = '/api/v1';
 var indexRoutes = require('./routes/index'); app.use(routeRoot, indexRoutes);
-var userRoutes = require('./routes/user_account') (app, passport, router); app.use(routeRoot, userRoutes);
+var userRoutes = require('./routes/user_account') (app, passport, SMTPTransporter, router); app.use(routeRoot, userRoutes);
 var profileRoutes = require('./routes/user_profile') (app, userSockets, s3, router); app.use(routeRoot, profileRoutes);
 var friendRoutes = require('./routes/friends') (app, userSockets, router); app.use(routeRoot, friendRoutes);
 var privacyRoutes = require('./routes/user_privacy') (app, router); app.use(routeRoot, privacyRoutes);

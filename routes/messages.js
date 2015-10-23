@@ -61,14 +61,35 @@ module.exports = function(app, userSockets, router) {
         });
 
         Promise.all([message, activeSubscribers, activeThread]).spread(function(messageData, activeSubscribersData, activeThreadData) {
-            console.log(activeThreadData);
             if (activeThreadData === null) {
                 res.status(401).json({error:"NOT_A_THREAD_MEMBER"});
                 return false;
             }
-            pushMessage(message, userSockets, io, activeSubscribersData);
-            res.status(200).json({message:messageData});
+            var nickName = Profile.findById(messageData.senderId,{raw:true,attributes:['nickName']}).then(function(data) {
+                var message = messageData.dataValues;
+                message.senderName = data.nickName;
+                pushMessage(message, userSockets, io, activeSubscribersData);
+                res.status(200).json({message:messageData});
+            })
+
         });
+    });
+
+    router.put('/messages/user/:uid/thread/:threadId/update-status',
+    function(req, res) {
+        UserThreads.update({
+            viewDate: Date.now()
+        },{
+            where: {
+                $and: {
+                    threadId: req.params.threadId,
+                    userAccountId: req.params.uid
+                }
+            }
+        }).then(function(response) {
+            console.log(response);
+            res.status(200).json(response);
+        })
     });
 
     router.post('/messages/user/:uid/create-thread', function(req, res) {
@@ -164,8 +185,6 @@ module.exports = function(app, userSockets, router) {
                 res.status(400).json({error:"NOT_A_MEMBER_OF_THREAD"})
             }
         });
-
-
     });
 
     return router;

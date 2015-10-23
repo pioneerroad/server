@@ -58,6 +58,7 @@ db.user_profile.hasMany(db.message_user_threads, {as:'userAccount', foreignKey:'
 db.messages.belongsTo(db.message_threads, {as:'messageThread', foreignKey:'threadId'});
 db.message_threads.hasMany(db.messages, {as:'messages', foreignKey:'threadId'});
 db.messages.belongsTo(db.user_profile, {as:'sender', foreignKey: 'senderId'});
+db.user_profile.hasMany(db.messages, {as:'sender', foreignKey: 'senderId'});
 
 db.sequelize = sequelize;
 
