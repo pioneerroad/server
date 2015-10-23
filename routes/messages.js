@@ -68,6 +68,7 @@ module.exports = function(app, userSockets, router) {
             var nickName = Profile.findById(messageData.senderId,{raw:true,attributes:['nickName','profilePhoto']}).then(function(data) {
                 var message = messageData.dataValues;
                 message.senderName = data.nickName;
+                message.profilePhoto = data.profilePhoto;
                 pushMessage(message, userSockets, io, activeSubscribersData);
                 res.status(200).json({message:messageData});
             })
