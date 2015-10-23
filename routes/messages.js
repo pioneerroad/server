@@ -75,6 +75,22 @@ module.exports = function(app, userSockets, router) {
         });
     });
 
+    router.put('/messages/user/:uid/thread:threadId/unsubscribe',
+    function(req, res) {
+        UserThreads.update({
+            status: 'inactive'
+        },{
+            where: {
+                threadId: req.params.threadId,
+                userAccountId: req.params.uid
+            }
+        }).then(function(response) {
+            res.status(200).json({message:'UNSUBSCRIBED_THREAD'});
+        }).error(function(err) {
+            res.status(400).json({error:err});
+        });
+    });
+
     router.put('/messages/user/:uid/thread/:threadId/update-status',
     function(req, res) {
         UserThreads.update({
