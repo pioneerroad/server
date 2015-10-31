@@ -201,6 +201,7 @@ module.exports = function(app, userSockets, s3, router) {
             };
 
             photoCtrl.imageUpload(req.body.imageFile, req.params.uid, processedImageSizes, 'profile-photo').then(function(data) {
+                console.log(req.body.imageFile);
                 Profile.findOne({
                     where: {userAccountId: req.params.uid}
                 }).then(function(profile) {
